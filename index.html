@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>원소 연금술 실험실</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117;--panel:#161b22;--panel2:#1c232d;--line:#2a3340;--text:#e6edf3;--muted:#8b98a7;--accent:#7ee0b5;--gold:#ffd166;--bad:#ff7b7b;
+  --c-alkali:#ff8a65;--c-alkaline:#ffb74d;--c-transition:#64b5f6;--c-post:#90a4ae;--c-metalloid:#4db6ac;--c-nonmetal:#aed581;--c-halogen:#f06292;--c-noble:#ba68c8;--c-lanth:#4dd0e1;--c-act:#9575cd;--c-unknown:#616161;
+}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1200px 600px at 20% -10%,#1b2a3a 0,transparent 60%),var(--bg);color:var(--text);font-family:'Noto Sans KR',system-ui,sans-serif;min-height:100vh}
+header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px 8px;max-width:1280px;margin:0 auto}
+h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-.5px}
+h1 span{color:var(--accent)}
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 12px;font-size:13px;color:var(--muted)}
+.stat b{color:var(--text);font-family:'JetBrains Mono',monospace;font-size:15px;margin-left:4px}
+main{max-width:1280px;margin:0 auto;padding:0 20px 40px}
+.mission{display:flex;gap:10px;align-items:center;background:linear-gradient(90deg,#2a2412,#1c232d);border:1px solid #4a3f1c;border-radius:12px;padding:10px 14px;margin:8px 0 12px;font-size:14px}
+.mission .tag{background:var(--gold);color:#1a1400;font-weight:800;border-radius:6px;padding:2px 8px;font-size:12px;white-space:nowrap}
+.mission .txt{flex:1}
+.mission button{flex:none}
+.table-wrap{overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+.ptable{display:grid;grid-template-columns:repeat(18,minmax(40px,1fr));gap:3px;min-width:760px}
+.el{position:relative;aspect-ratio:1/1.08;border-radius:6px;border:1px solid rgba(255,255,255,.08);background:color-mix(in srgb,var(--c) 18%,var(--panel));cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:transform .1s,box-shadow .15s,background .15s;user-select:none;padding:2px}
+.el:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.4);background:color-mix(in srgb,var(--c) 32%,var(--panel))}
+.el .z{position:absolute;top:2px;left:4px;font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.el .s{font-weight:800;font-size:clamp(13px,1.5vw,19px);color:var(--c);line-height:1}
+.el .n{font-size:clamp(7px,.7vw,10px);color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;max-width:100%}
+.el.sel{background:var(--c);box-shadow:0 0 0 2px #fff,0 0 18px var(--c)}
+.el.sel .s,.el.sel .n,.el.sel .z{color:#0d1117}
+.el.hint{animation:pulse 1.2s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 2px var(--gold)}}
+.gap{grid-column:span 1}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:10px 0 4px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.bar{position:sticky;bottom:0;z-index:5;margin-top:12px;background:rgba(22,27,34,.95);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.chips{flex:1;display:flex;flex-wrap:wrap;gap:6px;min-height:30px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:999px;background:var(--c);color:#0d1117;font-weight:700;font-size:13px;cursor:pointer}
+.chip small{font-weight:400;opacity:.8}
+.empty{color:var(--muted);font-size:13px}
+button{font-family:inherit;border:0;border-radius:10px;padding:10px 16px;font-weight:700;font-size:14px;cursor:pointer;transition:filter .15s,transform .1s}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.btn-main{background:var(--accent);color:#06281a}
+.btn-ai{background:linear-gradient(90deg,#d97757,#e8a87c);color:#2a1206}
+.btn-ghost{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.btn-sm{padding:6px 10px;font-size:12px}
+section.results{margin-top:18px;display:grid;gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+.card h2{margin:0 0 4px;font-size:17px}
+.card .sub{color:var(--muted);font-size:13px;margin-bottom:12px}
+.best{border-color:#3d6b57;background:linear-gradient(135deg,#123326,#161b22 60%)}
+.best .formula{font-size:34px}
+.formula{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:20px;color:var(--accent)}
+.formula sub{font-size:.62em}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.cpd{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;position:relative}
+.cpd .nm{font-weight:700;margin:2px 0 4px}
+.cpd .ds{font-size:13px;color:var(--muted);line-height:1.5}
+.cpd .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.pill{font-size:11px;border-radius:999px;padding:2px 8px;background:#0d1117;border:1px solid var(--line);color:var(--muted)}
+.pill.new{background:var(--gold);color:#1a1400;border:0;font-weight:800}
+.pill.pts{color:var(--gold);border-color:#4a3f1c}
+.set{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:15px}
+.set .plus{color:var(--muted)}
+.set .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+.warn{color:var(--bad);font-size:13px;margin-top:8px}
+.ai-out{white-space:normal;line-height:1.6;font-size:14px}
+.ai-out .eq{font-family:'JetBrains Mono',monospace;background:#0d1117;border-radius:8px;padding:6px 10px;margin:6px 0;display:block;color:#ffe2a8;overflow-x:auto}
+.ai-cpd{border-left:3px solid #e8a87c}
+.ai-cpd.invalid{border-left-color:var(--bad);opacity:.7}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid #2a1206;border-top-color:transparent;border-radius:50%;animation:sp 0.8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.dex{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px}
+.dex div{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px;text-align:center;font-size:11px;color:var(--muted)}
+.dex div.got{border-color:#3d6b57}
+.dex div .formula{font-size:14px}
+.dex div.lock .formula{color:#3a4450}
+.toast{position:fixed;left:50%;top:18px;transform:translateX(-50%) translateY(-120px);background:var(--gold);color:#1a1400;font-weight:800;padding:10px 18px;border-radius:999px;box-shadow:0 8px 30px rgba(0,0,0,.5);transition:transform .35s cubic-bezier(.2,1.4,.4,1);z-index:50}
+.toast.show{transform:translateX(-50%) translateY(0)}
+details summary{cursor:pointer;color:var(--muted);font-size:14px;margin:4px 0}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:40;padding:20px}
+.modal.on{display:flex}
+.modal .card{max-width:420px;width:100%}
+.info-big{font-size:48px;font-weight:800}
+@media (max-width:600px){header{padding:12px}main{padding:0 12px 30px}h1{font-size:18px}.best .formula{font-size:26px}}
+.btn-3d{background:#1f3b5a;color:#bfe3ff;border:1px solid #2f5b85;padding:5px 10px;font-size:12px;border-radius:8px}
+.btn-3d:hover{filter:brightness(1.2)}
+.best .btn-3d{padding:8px 14px;font-size:14px}
+.dex div.got{cursor:pointer}
+.dex div.got:hover{background:#1f2a36}
+#vModal .card{max-width:860px;width:100%;max-height:94vh;overflow:auto;padding:14px}
+#viewer{position:relative;width:100%;height:min(62vh,520px);border-radius:12px;background:radial-gradient(circle at 50% 40%,#1a2433,#090c11);overflow:hidden;touch-action:none}
+.vtop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
+.vtop .formula{font-size:26px}
+.vctrl{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 6px}
+.vctrl button{padding:6px 11px;font-size:12px;background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.vctrl button.on{background:var(--accent);color:#06281a;border-color:var(--accent)}
+.vleg{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:var(--muted);margin-top:6px}
+.vleg i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-2px;border:1px solid rgba(255,255,255,.2)}
+.kind{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;margin-right:6px}
+.kind.mol{background:#123326;color:#7ee0b5}.kind.crystal{background:#1f2f4a;color:#9cc8ff}.kind.ion{background:#3a2a12;color:#ffd166}.kind.unit{background:#3a1f2c;color:#ffadd2}.kind.ai{background:#3a2216;color:#f2b38f}
+.vmsg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;text-align:center;padding:20px}
+.vhelp{font-size:11px;color:var(--muted);margin-top:6px}
+.search{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
+.search form{display:flex;gap:8px}
+.search input{flex:1;min-width:0;background:#0d1117;border:1px solid var(--line);border-radius:10px;color:var(--text);font:inherit;font-size:15px;padding:10px 12px;outline:none}
+.search input:focus{border-color:var(--accent)}
+.sres{margin-top:12px}
+.sres .formula{font-size:28px}
+.comp{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+.atom{display:flex;align-items:center;gap:8px;background:color-mix(in srgb,var(--c) 15%,var(--panel2));border:1px solid color-mix(in srgb,var(--c) 45%,transparent);border-radius:12px;padding:8px 12px}
+.atom .sym{font-weight:800;font-size:22px;color:var(--c);font-family:'JetBrains Mono',monospace}
+.atom .cnt{font-size:12px;color:var(--muted);line-height:1.3}
+.atom .cnt b{color:var(--text);font-size:14px}
+.massbar{display:flex;height:12px;border-radius:999px;overflow:hidden;margin:6px 0 4px;background:#0d1117}
+.massbar span{height:100%}
+.sentence{font-size:15px;line-height:1.6;margin:8px 0}
+.cands{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.cands button{padding:5px 10px;font-size:12px;background:var(--panel2);color:var(--text);border:1px solid var(--line);font-weight:600}
+.el.look{box-shadow:0 0 0 2px var(--c),0 0 14px var(--c);transform:scale(1.06);z-index:2}
+.mix-sub{border-top:1px dashed var(--line);margin-top:12px;padding-top:12px}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/3dmol@2.5.5/build/3Dmol-min.js"></script>
+</head>
+<body>
+<header>
+  <h1>⚗️ 원소 <span>연금술</span> 실험실</h1>
+  <div class="stats">
+    <div class="stat">점수<b id="score">0</b></div>
+    <div class="stat">도감<b id="dexCount">0/0</b></div>
+    <div class="stat">AI 발견<b id="aiCount">0</b></div>
+  </div>
+</header>
+<main>
+  <div class="mission" id="mission">
+    <span class="tag">미션</span>
+    <span class="txt" id="missionTxt"></span>
+    <button class="btn-ghost btn-sm" id="hintBtn">힌트</button>
+    <button class="btn-ghost btn-sm" id="skipBtn">다른 미션</button>
+  </div>
+
+  <div class="search">
+    <form id="sForm"><input id="sInput" placeholder="화합물 이름이나 화학식 입력 (예: 소금, 설탕, 식초, H2SO4)" autocomplete="off" enterkeyhint="search"><button class="btn-main" type="submit">🔍 분해</button></form>
+    <div class="sres" id="sRes"></div>
+  </div>
+
+  <div class="table-wrap"><div class="ptable" id="ptable"></div></div>
+  <div class="legend" id="legend"></div>
+
+  <div class="bar">
+    <div class="chips" id="chips"><span class="empty">원소를 눌러서 2개 이상 골라 보세요 (길게 누르면 원소 정보)</span></div>
+    <button class="btn-ghost" id="clearBtn">비우기</button>
+    <button class="btn-main" id="mixBtn" disabled>🔬 조합하기</button>
+    <button class="btn-ai" id="aiBtn" disabled style="display:none">✨ Claude 화학자에게 묻기</button>
+  </div>
+
+  <section class="results" id="results"></section>
+
+  <section class="results">
+    <div class="card">
+      <details id="dexDetails">
+        <summary>📖 화합물 도감 열기 <small>(발견한 화합물을 누르면 3D 모형)</small></summary>
+        <div class="dex" id="dex" style="margin-top:10px"></div>
+        <div style="margin-top:10px;text-align:right"><button class="btn-ghost btn-sm" id="resetBtn">기록 초기화</button></div>
+      </details>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+<div class="modal" id="vModal"><div class="card">
+  <div class="vtop"><div><div class="formula" id="vFormula"></div><div style="font-weight:800;font-size:17px" id="vName"></div>
+    <div style="margin-top:4px"><span class="kind" id="vKind"></span><span class="sub" id="vNote" style="font-size:12px"></span></div></div>
+    <button class="btn-ghost btn-sm" id="vClose">닫기 ✕</button></div>
+  <div id="viewer"><div class="vmsg" id="vMsg">3D 엔진을 불러오는 중...</div></div>
+  <div class="vctrl" id="vStyles">
+    <button data-st="ballstick" class="on">공-막대</button><button data-st="sphere">공간 채움</button><button data-st="stick">막대</button><button data-st="line">선</button>
+    <span style="width:8px"></span>
+    <button id="vSpin" class="on">🔄 자동 회전</button><button id="vLabels">🏷️ 원소 표시</button><button id="vReset">↺ 시점 초기화</button>
+  </div>
+  <div class="vleg" id="vLeg"></div>
+  <div class="vhelp">드래그: 회전 · 두 손가락/휠: 확대 · 원자를 누르면 이름이 보여요</div>
+</div></div>
+<div class="modal" id="modal"><div class="card" id="modalCard"></div></div>
+
+<script>
+/* ---------------- 원소 데이터 ---------------- */
+const SYM="H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re Os Ir Pt Au Hg Tl Pb Bi Po At Rn Fr Ra Ac Th Pa U Np Pu Am Cm Bk Cf Es Fm Md No Lr Rf Db Sg Bh Hs Mt Ds Rg Cn Nh Fl Mc Lv Ts Og".split(" ");
+const KO="수소 헬륨 리튬 베릴륨 붕소 탄소 질소 산소 플루오린 네온 나트륨 마그네슘 알루미늄 규소 인 황 염소 아르곤 칼륨 칼슘 스칸듐 타이타늄 바나듐 크로뮴 망가니즈 철 코발트 니켈 구리 아연 갈륨 저마늄 비소 셀레늄 브로민 크립톤 루비듐 스트론튬 이트륨 지르코늄 나이오븀 몰리브데넘 테크네튬 루테늄 로듐 팔라듐 은 카드뮴 인듐 주석 안티모니 텔루륨 아이오딘 제논 세슘 바륨 란타넘 세륨 프라세오디뮴 네오디뮴 프로메튬 사마륨 유로퓸 가돌리늄 터븀 디스프로슘 홀뮴 어븀 툴륨 이터븀 루테튬 하프늄 탄탈럼 텅스텐 레늄 오스뮴 이리듐 백금 금 수은 탈륨 납 비스무트 폴로늄 아스타틴 라돈 프랑슘 라듐 악티늄 토륨 프로트악티늄 우라늄 넵투늄 플루토늄 아메리슘 퀴륨 버클륨 캘리포늄 아인슈타이늄 페르뮴 멘델레븀 노벨륨 로렌슘 러더포듐 더브늄 시보귬 보륨 하슘 마이트너륨 다름슈타튬 뢴트게늄 코페르니슘 니호늄 플레로븀 모스코븀 리버모륨 테네신 오가네손".split(" ");
+const CAT_NAMES={alkali:"알칼리 금속",alkaline:"알칼리 토금속",transition:"전이 금속",post:"전이후 금속",metalloid:"준금속",nonmetal:"비금속",halogen:"할로젠",noble:"비활성 기체",lanth:"란타넘족",act:"악티늄족",unknown:"성질 미확인"};
+function category(z){
+  if([3,11,19,37,55,87].includes(z))return"alkali";
+  if([4,12,20,38,56,88].includes(z))return"alkaline";
+  if(z>=57&&z<=71)return"lanth";
+  if(z>=89&&z<=103)return"act";
+  if([9,17,35,53,85,117].includes(z))return"halogen";
+  if([2,10,18,36,54,86,118].includes(z))return"noble";
+  if([1,6,7,8,15,16,34].includes(z))return"nonmetal";
+  if([5,14,32,33,51,52].includes(z))return"metalloid";
+  if([13,31,49,50,81,82,83,84].includes(z))return"post";
+  if(z>=109)return"unknown";
+  return"transition";
+}
+function position(z){
+  if(z===1)return[1,1];if(z===2)return[1,18];
+  const starts=[[3,2],[11,3],[19,4],[37,5],[55,6],[87,7]];
+  if(z>=57&&z<=71)return[9,z-57+3];
+  if(z>=89&&z<=103)return[10,z-89+3];
+  let p=0;for(let i=0;i<starts.length;i++)if(z>=starts[i][0])p=i;
+  const [s,period]=starts[p];let off=z-s;
+  if(period<=3){return[period,off<2?off+1:off+11];}
+  if(period>=6){ if(off>=2) off-=14; } // 란타넘/악티늄족 분리
+  return[period,off+1];
+}
+const ELEMENTS=SYM.map((s,i)=>({z:i+1,s,ko:KO[i],cat:category(i+1),pos:position(i+1)}));
+const BYSYM=Object.fromEntries(ELEMENTS.map(e=>[e.s,e]));
+
+/* ---------------- 화합물 데이터 (화학식|이름|설명) ---------------- */
+const RAW=`H2O|물|생명의 용매. 수소 2개와 산소 1개가 굽은 구조로 결합
+H2O2|과산화수소|상처 소독약과 표백제로 쓰이는 강한 산화제
+NH3|암모니아|하버-보슈법으로 만드는 비료의 출발 물질
+CH4|메테인|천연가스의 주성분이자 가장 단순한 탄화수소
+C3H8|프로페인|캠핑용 가스버너와 LPG의 연료
+C2H4|에틸렌|과일을 익게 하는 식물 호르몬이자 플라스틱 원료
+C2H2|아세틸렌|산소와 태우면 3000℃가 넘는 용접 불꽃을 낸다
+C6H6|벤젠|육각 고리 방향족 화합물의 대표
+CO2|이산화탄소|탄산음료의 기포이자 대표적 온실가스
+CO|일산화탄소|무색무취의 유독 기체. 헤모글로빈과 강하게 결합
+C2H6O|에탄올|술의 알코올 성분이자 소독용 알코올
+CH4O|메탄올|가장 단순한 알코올. 마시면 실명할 수 있는 독성 물질
+C6H12O6|포도당|광합성의 산물이자 세포의 주된 에너지원
+C12H22O11|설탕(수크로스)|포도당과 과당이 결합한 이당류
+C2H4O2|아세트산|식초의 신맛을 내는 카복실산
+CH2O|폼알데하이드|새집증후군의 원인 물질이자 방부제
+CH4N2O|요소|소변 속 질소 노폐물이자 대표적 질소 비료
+HCN|사이안화수소|아몬드 냄새가 나는 맹독성 물질
+NO2|이산화질소|적갈색 기체. 도시 스모그의 원인
+N2O|아산화질소|웃음 가스. 마취와 휘핑크림에 쓰인다
+HNO3|질산|비료와 화약 산업의 핵심 강산
+H2SO4|황산|'화학 산업의 피'라 불리는 가장 많이 생산되는 화학 물질
+SO2|이산화황|화산 가스와 산성비의 원인, 와인 보존제
+H2S|황화수소|썩은 달걀 냄새의 주인공
+HCl|염화수소(염산)|위액 속 산 성분
+HF|플루오린화수소|유리를 녹이는 특이한 산
+NaCl|염화나트륨(소금)|대표적인 이온 결합 화합물
+KCl|염화칼륨|저나트륨 소금과 칼륨 비료
+NaOH|수산화나트륨|비누를 만드는 강염기 '가성소다'
+KOH|수산화칼륨|알칼리 건전지의 전해질
+Ca(OH)2|수산화칼슘|소석회. 이산화탄소 검출용 석회수
+CaO|산화칼슘|생석회. 물과 만나면 뜨겁게 발열
+CaCO3|탄산칼슘|석회석, 대리석, 조개껍데기, 분필의 성분
+NaHCO3|탄산수소나트륨|베이킹소다. 빵을 부풀린다
+Na2CO3|탄산나트륨|유리 제조에 쓰이는 소다회
+KNO3|질산칼륨|초석. 흑색화약과 비료의 원료
+NH4NO3|질산암모늄|고농도 질소 비료이자 냉찜질팩의 재료
+NH4Cl|염화암모늄|건전지와 땜납 플럭스에 쓰인다
+MgO|산화마그네슘|마그네슘이 눈부신 빛을 내며 탈 때 생긴다
+MgSO4|황산마그네슘|엡섬 솔트. 입욕제로 쓰인다
+MgCl2|염화마그네슘|두부를 굳히는 간수의 주성분
+Al2O3|산화알루미늄|루비와 사파이어의 본체인 강옥
+AlCl3|염화알루미늄|땀 억제제와 프리델-크래프츠 반응 촉매
+SiO2|이산화규소|석영, 모래, 유리의 주성분
+SiC|탄화규소|다이아몬드급 경도의 반도체 소재(모아사나이트)
+Si3N4|질화규소|베어링과 엔진 부품에 쓰는 초경량 세라믹
+Fe2O3|산화철(III)|붉은 녹이자 적철석
+Fe3O4|사산화삼철|자철석. 천연 자석
+FeS2|황철석|금처럼 빛나 '바보의 금'이라 불린다
+FeCl3|염화철(III)|인쇄회로기판 에칭액
+CuO|산화구리(II)|검은색 구리 산화물
+CuSO4|황산구리(II)|수화되면 선명한 파란 결정이 된다
+CuCl2|염화구리(II)|불꽃 반응에서 청록색을 낸다
+Cu2CO3(OH)2|공작석|구리가 만드는 초록 광물. 자유의 여신상의 녹색
+CuFeS2|황동석|가장 중요한 구리 광석
+ZnO|산화아연|자외선 차단제의 흰 성분
+ZnS|황화아연|어둠 속에서 빛나는 야광 물질
+AgCl|염화은|빛에 반응해 검게 변한다
+AgBr|브로민화은|필름 사진의 감광 물질
+AgNO3|질산은|은거울 반응의 시약
+AuCl3|염화금(III)|금을 왕수에 녹이면 생기는 화합물
+PbS|방연석|납의 주요 광석이자 초기 라디오의 검파기
+HgS|진사|붉은 안료 '주사'
+TiO2|이산화타이타늄|가장 흰 안료. 페인트와 광촉매
+CaF2|플루오린화칼슘|형석. 자외선에 형광을 낸다
+NaF|플루오린화나트륨|불소 치약 성분
+CaSO4|황산칼슘|석고. 깁스와 석고보드
+BaSO4|황산바륨|위장 X선 촬영용 조영제
+CaC2|탄화칼슘|물과 반응해 아세틸렌을 만든다(카바이드 램프)
+Ca3(PO4)2|인산칼슘|뼈와 인광석의 성분
+Ca5(PO4)3(OH)|수산화인회석|뼈와 치아 법랑질의 본체
+H3PO4|인산|콜라의 톡 쏘는 신맛
+P4O10|오산화인|강력한 건조제
+PCl3|삼염화인|농약과 가소제의 원료
+NaClO|차아염소산나트륨|락스의 살균 성분
+KClO3|염소산칼륨|성냥 머리의 산화제
+KMnO4|과망가니즈산칼륨|진한 보라색 산화제이자 소독제
+MnO2|이산화망가니즈|건전지의 양극 물질
+Cr2O3|산화크로뮴(III)|초록색 안료와 에메랄드의 색
+K2Cr2O7|중크로뮴산칼륨|주황색 산화제. 음주 측정의 원조
+LiCl|염화리튬|흡습성이 매우 강한 소금
+Li2CO3|탄산리튬|조울증 치료제이자 배터리 원료
+LiCoO2|코발트산리튬|스마트폰 리튬이온 배터리 양극재
+LiFePO4|인산철리튬|전기차용 LFP 배터리 양극재
+BN|질화붕소|흑연처럼 또는 다이아몬드처럼 될 수 있는 소재
+H3BO3|붕산|안약과 바퀴벌레 약에 쓰인다
+Na2B4O7|붕사|슬라임 만들기의 핵심 재료
+GaN|질화갈륨|파란색 LED와 고속 충전기의 반도체
+GaAs|갈륨비소|인공위성 태양전지와 레이저 반도체
+CdTe|텔루륨화카드뮴|박막 태양전지 소재
+CdS|황화카드뮴|선명한 카드뮴 옐로 안료
+WC|탄화텅스텐|드릴 날과 공구용 초경합금
+MoS2|이황화몰리브데넘|윤활제이자 차세대 2차원 반도체
+UO2|이산화우라늄|원자로 핵연료 펠릿
+UF6|육플루오린화우라늄|우라늄 농축에 쓰이는 기체
+XeF2|이플루오린화제논|비활성 기체도 반응한다는 증거
+XeF4|사플루오린화제논|최초로 만들어진 이원 제논 화합물 중 하나
+KrF2|이플루오린화크립톤|크립톤으로 만든 몇 안 되는 화합물
+SF6|육플루오린화황|목소리를 굵게 만드는 무거운 기체, 절연 가스
+NF3|삼플루오린화질소|반도체 세정용 가스
+CCl4|사염화탄소|과거 소화기와 드라이클리닝 용제
+CHCl3|클로로폼|과거의 마취제
+CF4|사플루오린화탄소|매우 안정한 플루오린화 탄소
+C2F4|테트라플루오로에틸렌|테플론(PTFE) 프라이팬 코팅의 단위체
+CS2|이황화탄소|레이온 섬유 제조용 용매
+SnO2|이산화주석|터치스크린 투명 전극(ITO 계열)
+Bi2O3|산화비스무트|무독성 노란 안료
+As2O3|삼산화비소|역사 속 독약이자 현대의 백혈병 치료제
+YBa2Cu3O7|이트륨바륨구리산화물|액체 질소 온도에서 작동하는 고온 초전도체
+Nd2Fe14B|네오디뮴 자석|세상에서 가장 강한 영구 자석
+H2PtCl6|헥사클로로백금산|백금 촉매를 만드는 출발 물질
+OsO4|사산화오스뮴|전자현미경 염색제. 맹독성
+ZrO2|이산화지르코늄|큐빅 지르코니아 보석과 치아 크라운
+ZrSiO4|지르콘|지구에서 가장 오래된 광물 결정
+V2O5|오산화바나듐|황산 제조 촉매
+NiO|산화니켈|초록색 니켈 산화물
+CoCl2|염화코발트|습도에 따라 파랑↔분홍으로 변하는 지시약
+C2H5NO2|글라이신|가장 단순한 아미노산
+C3H7NO2|알라닌|단백질을 이루는 아미노산
+C8H10N4O2|카페인|커피의 각성 성분
+C9H8O4|아스피린|아세틸살리실산. 해열진통제
+C6H8O6|비타민 C|아스코르브산. 강력한 항산화제
+NaI|아이오딘화나트륨|요오드 첨가 소금
+KI|아이오딘화칼륨|방사능 사고 시 갑상샘 보호제
+KBr|브로민화칼륨|적외선 분광기의 창 재료
+LiH|수소화리튬|수소 저장 물질
+BeO|산화베릴륨|열전도율이 매우 높은 세라믹
+KAl(SO4)2|명반|물을 맑게 하고 봉숭아 물들일 때 쓴다
+Al2Si2O5(OH)4|고령토|도자기를 만드는 흙(카올린)
+Mg3Si4O10(OH)2|활석|가장 무른 광물. 베이비 파우더
+Be3Al2Si6O18|녹주석|에메랄드와 아쿠아마린의 본체
+CaTiO3|페로브스카이트|태양전지 소재 이름의 유래가 된 광물
+CH6NPbI3|메틸암모늄 납 아이오딘화물|차세대 페로브스카이트 태양전지
+FeTiO3|일메나이트|타이타늄의 주요 광석
+NaN3|아자이드화나트륨|자동차 에어백을 순식간에 부풀린다
+SrCO3|탄산스트론튬|불꽃놀이의 빨간색
+BaCl2|염화바륨|불꽃놀이의 초록색
+CsCl|염화세슘|독특한 결정 구조의 대명사
+RbCl|염화루비듐|원자시계 연구에 쓰이는 루비듐 소금
+In2O3|산화인듐|투명 전극 ITO의 주성분
+GeO2|이산화저마늄|광섬유의 굴절률 조절
+SeO2|이산화셀레늄|유기 합성 산화제
+Sb2S3|휘안석|고대 이집트의 아이라이너
+TlCl|염화탈륨|방사선 검출기 소재
+PbO|산화납(II)|크리스털 유리의 재료
+HgO|산화수은(II)|가열하면 산소가 나와 산소 발견에 쓰였다
+ScF3|플루오린화스칸듐|가열하면 오히려 줄어드는 신기한 물질
+Y2O3|산화이트륨|붉은 형광체의 모체
+CeO2|이산화세륨|유리 연마제와 자동차 촉매
+Eu2O3|산화유로퓸|빨간색 형광체. 유로화 위조 방지
+Gd2O3|산화가돌리늄|MRI 조영제 연구 소재
+ThO2|이산화토륨|녹는점이 가장 높은 산화물 중 하나
+PuO2|이산화플루토늄|우주 탐사선의 원자력 전지 연료
+TaC|탄화탄탈럼|녹는점이 약 3900℃인 초고온 세라믹
+Nb3Sn|나이오븀-주석|MRI 초전도 자석 선재
+RuO2|이산화루테늄|칩 저항과 전극 촉매
+PdCl2|염화팔라듐|일산화탄소 검출 시약
+IrO2|이산화이리듐|수전해 산소 발생 촉매
+ReS2|이황화레늄|2차원 반도체 소재
+HAuCl4|염화금산|금 나노입자 합성의 출발 물질`;
+
+function parseFormula(f){
+  let i=0;
+  function num(){let m=f.slice(i).match(/^\d+/);if(m){i+=m[0].length;return+m[0]}return 1}
+  function group(){
+    const c={};
+    while(i<f.length){
+      const ch=f[i];
+      if(ch==='('){i++;const g=group();const n=num();for(const k in g)c[k]=(c[k]||0)+g[k]*n;}
+      else if(ch===')'){i++;return c;}
+      else{const m=f.slice(i).match(/^[A-Z][a-z]?/);if(!m){i++;continue}i+=m[0].length;const n=num();c[m[0]]=(c[m[0]]||0)+n;}
+    }
+    return c;
+  }
+  return group();
+}
+const COMPOUNDS=RAW.trim().split("\n").map(line=>{
+  const [f,name,desc]=line.split("|");
+  const comp=parseFormula(f);const els=Object.keys(comp);
+  const atoms=Object.values(comp).reduce((a,b)=>a+b,0);
+  const rare=els.reduce((a,s)=>a+(BYSYM[s].z>30?1:0),0);
+  const pts=els.length*els.length*10+Math.min(atoms,30)+rare*15;
+  return{f,name,desc,comp,els,atoms,pts};
+});
+
+/* ---------------- 상태 ---------------- */
+let selected=[];
+let save={found:{},score:0,ai:{}};
+try{const s=JSON.parse(localStorage.getItem("chemlab")||"null");if(s)save=Object.assign(save,s)}catch(e){}
+function persist(){try{localStorage.setItem("chemlab",JSON.stringify(save))}catch(e){}}
+let mission=null;
+
+/* ---------------- 렌더 ---------------- */
+const $=id=>document.getElementById(id);
+function fmt(f){return f.replace(/(\d+)/g,"<sub>$1</sub>")}
+function catColor(cat){return`var(--c-${cat})`}
+
+function buildTable(){
+  const t=$("ptable");
+  const cells={};
+  ELEMENTS.forEach(e=>cells[e.pos[0]+"-"+e.pos[1]]=e);
+  for(let r=1;r<=10;r++){
+    for(let c=1;c<=18;c++){
+      const e=cells[r+"-"+c];
+      const d=document.createElement("div");
+      if(r===8){d.style.height="8px";t.appendChild(d);continue}
+      if(!e){
+        if((r===6||r===7)&&c===3){d.className="el";d.style.cssText="--c:var(--c-"+(r===6?"lanth":"act")+");cursor:default;opacity:.55";d.innerHTML=`<span class="s" style="font-size:11px">${r===6?"57–71":"89–103"}</span>`}
+        t.appendChild(d);continue}
+      d.className="el";d.dataset.s=e.s;d.style.setProperty("--c",catColor(e.cat));
+      d.innerHTML=`<span class="z">${e.z}</span><span class="s">${e.s}</span><span class="n">${e.ko}</span>`;
+      d.onclick=()=>toggle(e.s);
+      let timer;d.addEventListener("pointerdown",()=>{timer=setTimeout(()=>{timer="fired";showInfo(e)},550)});
+      d.addEventListener("pointerup",ev=>{if(timer==="fired"){ev.preventDefault();d.onclick=null;setTimeout(()=>d.onclick=()=>toggle(e.s),50)}clearTimeout(timer)});
+      d.addEventListener("pointerleave",()=>clearTimeout(timer));
+      d.addEventListener("contextmenu",ev=>{ev.preventDefault();showInfo(e)});
+      t.appendChild(d);
+    }
+  }
+  $("legend").innerHTML=Object.entries(CAT_NAMES).map(([k,v])=>`<span><i style="background:${catColor(k)}"></i>${v}</span>`).join("");
+}
+function showInfo(e){
+  const known=COMPOUNDS.filter(c=>c.els.includes(e.s));
+  $("modalCard").innerHTML=`<div style="display:flex;gap:14px;align-items:center"><div class="info-big" style="color:${catColor(e.cat)}">${e.s}</div><div><div style="font-weight:800;font-size:18px">${e.ko}</div><div class="sub" style="margin:0">원자번호 ${e.z} · ${CAT_NAMES[e.cat]}</div></div></div>
+  <p class="sub" style="margin-top:12px">이 원소가 들어간 도감 화합물: ${known.length}종</p>
+  <div style="display:flex;flex-wrap:wrap;gap:6px">${known.slice(0,12).map(c=>`<span class="pill">${save.found[c.f]?fmt(c.f):"???"}</span>`).join("")}</div>
+  <div style="text-align:right;margin-top:14px"><button class="btn-ghost btn-sm" onclick="closeModal()">닫기</button></div>`;
+  $("modal").classList.add("on");
+}
+function closeModal(){$("modal").classList.remove("on")}
+$("modal").onclick=e=>{if(e.target.id==="modal")closeModal()};
+
+function toggle(s){
+  const i=selected.indexOf(s);
+  if(i>=0)selected.splice(i,1);else selected.push(s);
+  renderSelection();
+}
+function renderSelection(){
+  document.querySelectorAll(".el[data-s]").forEach(d=>d.classList.toggle("sel",selected.includes(d.dataset.s)));
+  const ch=$("chips");
+  if(!selected.length)ch.innerHTML=`<span class="empty">원소를 눌러서 2개 이상 골라 보세요 (길게 누르면 원소 정보)</span>`;
+  else ch.innerHTML=selected.map(s=>{const e=BYSYM[s];return`<span class="chip" style="--c:${catColor(e.cat)}" onclick="toggle('${s}')">${s}<small>${e.ko}</small> ✕</span>`}).join("");
+  $("mixBtn").disabled=selected.length<1;
+  $("aiBtn").disabled=selected.length<1;
+}
+
+/* ---------------- 조합 엔진 ---------------- */
+function mix(){
+  const set=new Set(selected);
+  const possible=COMPOUNDS.filter(c=>c.els.every(s=>set.has(s)));
+  possible.sort((a,b)=>b.els.length-a.els.length||b.pts-a.pts);
+  // 탐욕적 집합 덮개: 선택 원소를 최대한 모두 쓰는 화합물 세트
+  const uncovered=new Set(selected);const cover=[];
+  while(uncovered.size){
+    let best=null,bestGain=0;
+    for(const c of possible){const g=c.els.filter(s=>uncovered.has(s)).length;if(g>bestGain||(g===bestGain&&best&&c.pts>best.pts&&g>0)){best=c;bestGain=g}}
+    if(!best||bestGain===0)break;
+    cover.push(best);best.els.forEach(s=>uncovered.delete(s));
+  }
+  // 발견 처리
+  const newly=[];let gained=0;
+  possible.forEach(c=>{if(!save.found[c.f]){save.found[c.f]=Date.now();newly.push(c.f);gained+=c.pts}});
+  let missionDone=false;
+  if(mission&&possible.some(c=>c.f===mission.f)){missionDone=true;gained+=100}
+  save.score+=gained;persist();
+  renderResults(possible,cover,[...uncovered],newly);
+  updateStats();renderDex();
+  if(missionDone){toast(`🎯 미션 성공! ${mission.name} +100점`);newMission()}
+  else if(newly.length)toast(`✨ 새 화합물 ${newly.length}종 발견! +${gained}점`);
+}
+function cpdCard(c,newly){
+  return`<div class="cpd"><div class="formula">${fmt(c.f)}</div><div class="nm">${c.name}</div><div class="ds">${c.desc}</div>
+  <div class="meta"><span class="pill pts">${c.pts}점</span><span class="pill">${c.els.length}원소</span>${newly.includes(c.f)?'<span class="pill new">NEW</span>':""}<span style="flex:1"></span><button class="btn-3d" data-3d="${c.f}" data-name="${c.name}">🧊 3D</button></div></div>`;
+}
+function renderResults(possible,cover,left,newly){
+  const r=$("results");
+  if(!possible.length){
+    r.innerHTML=`<div class="card"><h2>🤔 도감에 있는 조합이 없어요</h2><div class="sub">선택한 원소 ${selected.join(", ")}만으로 만들 수 있는 화합물이 기본 도감에 없습니다. ${hasAI?"오른쪽의 <b>✨ Claude 화학자에게 묻기</b>로 더 깊이 분석해 보세요.":"산소(O), 수소(H), 염소(Cl) 같은 원소를 추가해 보세요."}</div></div>`+aiSlot();
+    return}
+  const best=possible[0];
+  r.innerHTML=`
+  <div class="card best"><div class="sub" style="margin:0">🏆 최적 조합 · 선택한 원소를 가장 많이 쓰는 화합물</div>
+    <div class="formula">${fmt(best.f)}</div><h2>${best.name}</h2><div class="sub" style="margin-bottom:6px">${best.desc}</div>
+    <div class="meta" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="pill pts">${best.pts}점</span><span class="pill">${best.els.map(s=>BYSYM[s].ko).join(" + ")}</span><span style="flex:1"></span><button class="btn-3d" data-3d="${best.f}" data-name="${best.name}">🧊 3D 모형 보기</button></div></div>
+  ${cover.length>1?`<div class="card"><h2>🧩 모든 원소를 활용하는 추천 세트</h2><div class="sub">선택한 원소를 최대한 남김없이 쓰도록 고른 화합물 묶음</div>
+    <div class="set">${cover.map(c=>`<span class="box"><span class="formula" style="font-size:17px">${fmt(c.f)}</span> <small style="color:var(--muted)">${c.name}</small></span>`).join('<span class="plus">+</span>')}</div>
+    ${left.length?`<div class="warn">사용되지 못한 원소: ${left.map(s=>BYSYM[s].ko+"("+s+")").join(", ")}</div>`:""}</div>`:
+    (left.length?`<div class="card"><div class="warn" style="margin:0">최적 조합에 쓰이지 못한 원소: ${left.map(s=>BYSYM[s].ko+"("+s+")").join(", ")}</div></div>`:"")}
+  <div class="card"><h2>⚗️ 만들 수 있는 화합물 ${possible.length}종</h2><div class="sub">선택한 원소만으로 만들 수 있는 도감 속 화합물</div>
+    <div class="cgrid">${possible.map(c=>cpdCard(c,newly)).join("")}</div></div>`+aiSlot();
+}
+function aiSlot(){return`<div id="aiSlot"></div>`}
+
+/* ---------------- 미션 / 도감 ---------------- */
+function newMission(){
+  const pool=COMPOUNDS.filter(c=>!save.found[c.f]&&c.els.length>=2);
+  if(!pool.length){mission=null;$("missionTxt").textContent="모든 화합물을 발견했어요! 진정한 연금술사 🧙";return}
+  mission=pool[Math.floor(Math.random()*pool.length)];
+  $("missionTxt").innerHTML=`“${mission.desc}” — 이 물질을 만들어 보세요 <span style="color:var(--gold)">(+100점)</span>`;
+  document.querySelectorAll(".el.hint").forEach(d=>d.classList.remove("hint"));
+}
+$("hintBtn").onclick=()=>{if(!mission)return;document.querySelectorAll(".el.hint").forEach(d=>d.classList.remove("hint"));
+  const s=mission.els[Math.floor(Math.random()*mission.els.length)];
+  document.querySelector(`.el[data-s="${s}"]`).classList.add("hint");
+  toast(`💡 ${BYSYM[s].ko}(${s})가 들어가요 · 원소 ${mission.els.length}종`)};
+$("skipBtn").onclick=newMission;
+
+function renderDex(){
+  $("dex").innerHTML=COMPOUNDS.map(c=>save.found[c.f]
+    ?`<div class="got" title="${c.desc}" data-3d="${c.f}" data-name="${c.name}"><div class="formula">${fmt(c.f)}</div>${c.name}</div>`
+    :`<div class="lock"><div class="formula">???</div>원소 ${c.els.length}종</div>`).join("");
+}
+function updateStats(){
+  $("score").textContent=save.score;
+  $("dexCount").textContent=Object.keys(save.found).filter(f=>COMPOUNDS.some(c=>c.f===f)).length+"/"+COMPOUNDS.length;
+  $("aiCount").textContent=Object.keys(save.ai).length;
+}
+$("resetBtn").onclick=function(){
+  if(this.dataset.armed){save={found:{},score:0,ai:{}};persist();updateStats();renderDex();newMission();this.textContent="기록 초기화";delete this.dataset.armed;toast("기록을 초기화했어요")}
+  else{this.dataset.armed=1;this.textContent="정말 초기화? 한 번 더 누르기";setTimeout(()=>{delete this.dataset.armed;this.textContent="기록 초기화"},3000)}
+};
+
+let toastT;function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),2400)}
+
+$("mixBtn").onclick=mix;
+$("clearBtn").onclick=()=>{selected=[];renderSelection();$("results").innerHTML=""};
+
+/* ---------------- Claude 화학자 ---------------- */
+let sample=null,hasAI=false,aiBusy=false;
+(async()=>{try{
+  if(window.claude&&window.claude.use){sample=await window.claude.use("sample");
+    if(sample){hasAI=true;$("aiBtn").style.display=""}}
+}catch(e){}})();
+
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+$("aiBtn").onclick=async()=>{
+  if(!sample||aiBusy)return;
+  if(!$("aiSlot")){mix()}
+  const slot=$("aiSlot");if(!slot)return;
+  aiBusy=true;const btn=$("aiBtn");btn.innerHTML=`<span class="spinner"></span>분석 중...`;btn.disabled=true;
+  const els=selected.map(s=>`${s}(${BYSYM[s].ko})`).join(", ");
+  slot.innerHTML=`<div class="card"><h2>✨ Claude 화학자의 분석</h2><div class="sub">선택한 원소: ${esc(els)}</div><div class="ai-out" id="aiLive">생각하는 중...</div></div>`;
+  const prompt=`당신은 친절하고 정확한 화학자입니다. 사용자가 주기율표에서 다음 원소들을 골랐습니다: ${els}.
+이 원소들"만"(일부만 써도 됨, 다른 원소 추가 금지) 사용해서 실제로 존재하거나 합성 가능한 화합물 중 '최적의 조합'을 찾아주세요.
+최적의 기준: (1) 선택한 원소를 최대한 많이 활용 (2) 화학적으로 안정하고 실제 존재 (3) 흥미롭거나 유용함.
+결과는 반드시 아래 형식의 JSON 하나로만 답하세요(코드블록·설명 없이):
+{"summary":"선택한 원소 조합에 대한 2문장 이내 총평(한국어)",
+ "compounds":[{"formula":"화학식(괄호 허용, 이온 전하·수화물 표기 없이)","name":"한국어 이름","type":"결합 종류(이온결합/공유결합/금속결합/착화합물 등)","reaction":"원소 상태(또는 간단한 출발 물질)로부터의 균형 맞춘 반응식","why":"왜 좋은 조합인지 1~2문장","use":"실생활 용도나 재미있는 사실 1문장","safety":"주의사항 짧게 또는 빈 문자열","score":1~10 사이 정수(최적도)}],
+ "unused":["어떤 화합물에도 쓰기 어려운 원소 기호들"],
+ "unusedReason":"쓰기 어려운 이유(없으면 빈 문자열)"}
+compounds는 최적도 순으로 3~5개. 비활성 기체나 초중원소처럼 화합물을 거의 만들지 않는 원소가 있으면 정직하게 unused에 넣고 이유를 설명하세요. 위험한 합성 절차는 쓰지 마세요.`;
+  try{
+    let data;
+    try{ data=await sample.json(prompt,{modelTier:"complex"}); }
+    catch(e){
+      if(e&&(e.code==="not_granted"||e.code==="rate_limited"))throw e;
+      const r=await sample(prompt,{modelTier:"complex"});
+      const m=r.text.match(/\{[\s\S]*\}/);data=JSON.parse(m?m[0]:r.text);
+    }
+    renderAI(data);
+  }catch(e){
+    const msg=e&&e.code==="not_granted"?"Claude 사용 권한이 허용되지 않았어요. 기본 도감 조합은 계속 쓸 수 있어요."
+      :e&&e.code==="rate_limited"?"요청이 많아요. 잠시 후 다시 시도해 주세요.":"분석 결과를 읽지 못했어요. 다시 시도해 주세요.";
+    $("aiLive").innerHTML=`<div class="warn">${msg}</div>`;
+    if(e&&e.code==="not_granted"){$("aiBtn").style.display="none";hasAI=false}
+  }finally{aiBusy=false;btn.innerHTML="✨ Claude 화학자에게 묻기";btn.disabled=selected.length<1}
+};
+
+function stars(s){return Math.max(0,Math.min(5,Math.round((+s||0)/2)))}
+function renderAI(d){
+  const set=new Set(selected);let gained=0,nNew=0;
+  const list=(d.compounds||[]).map(c=>{
+    const comp=parseFormula(String(c.formula||""));const els=Object.keys(comp);
+    const valid=els.length>0&&els.every(s=>set.has(s));
+    let isNew=false,pts=0;
+    if(valid){const known=COMPOUNDS.find(k=>k.f===c.formula);
+      if(known){if(!save.found[known.f]){save.found[known.f]=Date.now();gained+=known.pts;isNew=true}}
+      else if(!save.ai[c.formula]){pts=els.length*els.length*8+(+c.score||0)*3;save.ai[c.formula]={name:c.name,t:Date.now()};gained+=pts;isNew=true}
+      if(isNew)nNew++;}
+    return`<div class="cpd ai-cpd ${valid?"":"invalid"}">
+      <div class="formula">${fmt(esc(c.formula))}</div><div class="nm">${esc(c.name)} <span class="pill">${esc(c.type)}</span></div>
+      ${c.reaction?`<span class="eq">${esc(c.reaction)}</span>`:""}
+      <div class="ds">${esc(c.why)}</div>
+      ${c.use?`<div class="ds" style="margin-top:6px">💡 ${esc(c.use)}</div>`:""}
+      ${c.safety?`<div class="ds" style="margin-top:6px;color:#ffb3a7">⚠️ ${esc(c.safety)}</div>`:""}
+      <div class="meta"><span class="pill pts">최적도 ${"★".repeat(stars(c.score))}${"☆".repeat(5-stars(c.score))}</span>
+      ${isNew?'<span class="pill new">NEW</span>':""}${valid?"":'<span class="pill" style="color:var(--bad)">선택 외 원소 포함</span>'}<span style="flex:1"></span><button class="btn-3d" data-3d="${esc(c.formula)}" data-name="${esc(c.name)}">🧊 3D</button></div></div>`;
+  }).join("");
+  save.score+=gained;persist();updateStats();renderDex();
+  $("aiLive").innerHTML=`<p style="margin:0 0 12px">${esc(d.summary)}</p><div class="cgrid">${list||'<div class="sub">추천할 화합물을 찾지 못했어요.</div>'}</div>
+   ${(d.unused&&d.unused.length)?`<div class="warn">쓰기 어려운 원소: ${d.unused.map(esc).join(", ")} — ${esc(d.unusedReason)}</div>`:""}`;
+  if(mission&&(d.compounds||[]).some(c=>c.formula===mission.f)&&mission.els.every(s=>set.has(s))){save.score+=100;persist();updateStats();toast(`🎯 미션 성공! ${mission.name} +100점`);newMission()}
+  else if(nNew)toast(`✨ Claude와 새 화합물 ${nNew}종 발견! +${gained}점`);
+}
+
+/* ---------------- 3D 분자 모형 ---------------- */
+const MOL3D={"H2O":{"k":"mol","n":"","a":[["O",0.01,0.4,0.0],["H",-0.77,-0.18,0.0],["H",0.76,-0.21,0.0]],"b":[[0,1,1],[0,2,1]]},"H2O2":{"k":"mol","n":"","a":[["O",-0.65,0.2,0.32],["O",0.65,0.21,-0.33],["H",-1.14,-0.22,-0.4],["H",1.15,-0.19,0.41]],"b":[[0,1,1],[0,2,1],[1,3,1]]},"NH3":{"k":"mol","n":"","a":[["N",0.0,-0.0,0.3],["H",-0.58,-0.74,-0.11],["H",-0.35,0.87,-0.09],["H",0.93,-0.13,-0.1]],"b":[[0,1,1],[0,2,1],[0,3,1]]},"CH4":{"k":"mol","n":"","a":[["C",0.0,-0.0,-0.0],["H",-0.71,-0.28,-0.78],["H",0.12,1.09,0.01],["H",-0.37,-0.33,0.97],["H",0.97,-0.47,-0.2]],"b":[[0,1,1],[0,2,1],[0,3,1],[0,4,1]]},"C3H8":{"k":"mol","n":"","a":[["C",1.13,0.52,-0.32],["C",0.13,-0.6,-0.06],["C",-1.22,-0.06,0.36],["H",2.09,0.1,-0.62],["H",0.77,1.18,-1.12],["H",1.28,1.12,0.58],["H",0.52,-1.26,0.72],["H",0.02,-1.21,-0.97],["H",-1.92,-0.89,0.54],["H",-1.14,0.52,1.28],["H",-1.65,0.58,-0.42]],"b":[[0,1,1],[1,2,1],[0,3,1],[0,4,1],[0,5,1],[1,6,1],[1,7,1],[2,8,1],[2,9,1],[2,10,1]]},"C2H4":{"k":"mol","n":"","a":[["C",-0.67,-0.04,-0.0],["C",0.67,0.04,0.0],["H",-1.28,0.84,0.14],["H",-1.17,-0.99,-0.15],["H",1.28,-0.84,-0.14],["H",1.17,0.99,0.15]],"b":[[0,1,2],[0,2,1],[0,3,1],[1,4,1],[1,5,1]]},"C2H2":{"k":"mol","n":"","a":[["C",-0.56,0.08,-0.2],["C",0.56,-0.08,0.2],["H",-1.56,0.22,-0.55],["H",1.56,-0.22,0.55]],"b":[[0,1,3],[0,2,1],[1,3,1]]},"C6H6":{"k":"mol","n":"","a":[["C",-0.8,1.14,0.03],["C",-1.39,-0.12,-0.06],["C",-0.59,-1.26,-0.09],["C",0.8,-1.14,-0.03],["C",1.39,0.12,0.06],["C",0.59,1.26,0.09],["H",-1.42,2.04,0.06],["H",-2.47,-0.21,-0.1],["H",-1.05,-2.24,-0.16],["H",1.42,-2.04,-0.06],["H",2.47,0.21,0.1],["H",1.05,2.24,0.16]],"b":[[0,1,1],[1,2,2],[2,3,1],[3,4,2],[4,5,1],[5,0,2],[0,6,1],[1,7,1],[2,8,1],[3,9,1],[4,10,1],[5,11,1]]},"CO2":{"k":"mol","n":"","a":[["O",-1.4,0.08,0.0],["C",-0.0,0.0,0.0],["O",1.4,-0.08,0.0]],"b":[[0,1,2],[1,2,2]]},"CO":{"k":"mol","n":"","a":[["C",0.56,0.0,0.0],["O",-0.56,0.0,0.0]],"b":[[0,1,3]]},"C2H6O":{"k":"mol","n":"","a":[["C",-0.85,0.22,0.19],["C",0.39,-0.36,-0.45],["O",1.53,0.38,-0.05],["H",-1.75,-0.33,-0.11],["H",-0.97,1.28,-0.08],["H",-0.78,0.19,1.29],["H",0.53,-1.4,-0.16],["H",0.31,-0.31,-1.54],["H",1.6,0.33,0.91]],"b":[[0,1,1],[1,2,1],[0,3,1],[0,4,1],[0,5,1],[1,6,1],[1,7,1],[2,8,1]]},"CH4O":{"k":"mol","n":"","a":[["C",-0.37,-0.0,0.01],["O",0.91,-0.44,-0.4],["H",-0.47,-0.11,1.09],["H",-1.13,-0.62,-0.48],["H",-0.51,1.04,-0.28],["H",1.56,0.12,0.06]],"b":[[0,1,1],[0,2,1],[0,3,1],[0,4,1],[1,5,1]]},"C6H12O6":{"k":"mol","n":"","a":[["O",3.35,0.13,0.03],["C",2.28,-0.79,-0.03],["C",1.03,-0.2,-0.71],["O",0.02,-1.22,-0.82],["C",-0.84,-1.29,0.3],["O",-1.69,-2.42,0.15],["C",-1.71,-0.03,0.41],["O",-2.97,-0.18,-0.28],["C",-1.0,1.19,-0.18],["O",-1.47,2.39,0.45],["C",0.51,1.08,-0.01],["O",1.12,2.26,-0.56],["H",4.13,-0.35,0.35],["H",2.05,-1.13,0.98],["H",2.61,-1.68,-0.59],["H",1.32,0.07,-1.74],["H",-0.24,-1.43,1.21],["H",-1.08,-3.17,0.03],["H",-1.98,0.14,1.46],["H",-3.09,-1.15,-0.36],["H",-1.24,1.3,-1.25],["H",-2.44,2.4,0.29],["H",0.76,1.07,1.06],["H",0.58,3.01,-0.22]],"b":[[0,1,1],[1,2,1],[2,3,1],[3,4,1],[4,5,1],[4,6,1],[6,7,1],[6,8,1],[8,9,1],[8,10,1],[10,11,1],[10,2,1],[0,12,1],[1,13,1],[1,14,1],[2,15,1],[4,16,1],[5,17,1],[6,18,1],[7,19,1],[8,20,1],[9,21,1],[10,22,1],[11,23,1]]},"C12H22O11":{"k":"mol","n":"","a":[["O",2.97,-2.23,0.12],["C",4.03,-1.36,0.5],["C",3.52,-0.02,1.05],["O",2.96,0.75,-0.04],["C",1.53,0.89,0.22],["C",1.08,2.2,-0.46],["O",1.91,3.31,-0.08],["O",0.93,-0.28,-0.33],["C",-0.49,-0.32,-0.42],["O",-0.95,0.44,-1.53],["C",-2.38,0.54,-1.61],["C",-2.85,1.91,-1.08],["O",-4.27,2.02,-1.16],["C",-3.13,-0.61,-0.9],["O",-4.46,-0.76,-1.41],["C",-2.36,-1.9,-1.12],["O",-3.04,-3.0,-0.5],["C",-0.94,-1.8,-0.55],["O",-0.06,-2.55,-1.41],["C",1.48,0.95,1.75],["O",0.2,0.77,2.35],["C",2.43,-0.18,2.11],["O",2.91,-0.01,3.45],["H",2.37,-1.73,-0.48],["H",4.66,-1.2,-0.39],["H",4.62,-1.87,1.26],["H",4.37,0.55,1.43],["H",0.05,2.46,-0.19],["H",1.14,2.11,-1.55],["H",2.82,3.03,-0.3],["H",-0.94,0.1,0.49],["H",-2.64,0.51,-2.67],["H",-2.39,2.71,-1.67],["H",-2.54,2.05,-0.04],["H",-4.49,2.93,-0.92],["H",-3.23,-0.42,0.18],["H",-4.86,0.14,-1.39],["H",-2.33,-2.14,-2.19],["H",-3.98,-2.89,-0.77],["H",-0.85,-2.27,0.44],["H",-0.37,-3.47,-1.37],["H",1.88,1.9,2.13],["H",0.38,0.69,3.31],["H",1.91,-1.14,2.07],["H",3.43,-0.81,3.66]],"b":[[0,1,1],[1,2,1],[2,3,1],[3,4,1],[4,5,1],[5,6,1],[4,7,1],[7,8,1],[8,9,1],[9,10,1],[10,11,1],[11,12,1],[10,13,1],[13,14,1],[13,15,1],[15,16,1],[15,17,1],[17,18,1],[4,19,1],[19,20,1],[19,21,1],[21,22,1],[21,2,1],[17,8,1],[0,23,1],[1,24,1],[1,25,1],[2,26,1],[5,27,1],[5,28,1],[6,29,1],[8,30,1],[10,31,1],[11,32,1],[11,33,1],[12,34,1],[13,35,1],[14,36,1],[15,37,1],[16,38,1],[17,39,1],[18,40,1],[19,41,1],[20,42,1],[21,43,1],[22,44,1]]},"C2H4O2":{"k":"mol","n":"","a":[["C",-0.95,-0.07,-0.11],["C",0.49,0.29,0.03],["O",0.96,1.42,-0.04],["O",1.27,-0.78,0.25],["H",-1.31,-0.54,0.81],["H",-1.54,0.83,-0.29],["H",-1.08,-0.75,-0.96],["H",2.17,-0.4,0.32]],"b":[[0,1,1],[1,2,2],[1,3,1],[0,4,1],[0,5,1],[0,6,1],[3,7,1]]},"CH2O":{"k":"mol","n":"","a":[["C",-0.01,0.0,0.0],["O",1.19,-0.22,-0.0],["H",-0.76,-0.81,0.0],["H",-0.42,1.02,0.0]],"b":[[0,1,2],[0,2,1],[0,3,1]]},"CH4N2O":{"k":"mol","n":"","a":[["N",0.91,-0.22,0.67],["C",0.1,0.43,-0.19],["N",-1.03,-0.26,-0.46],["O",0.37,1.51,-0.68],["H",0.96,-1.22,0.56],["H",1.82,0.23,0.77],["H",-1.7,0.28,-1.0],["H",-1.43,-0.75,0.32]],"b":[[0,1,1],[1,2,1],[1,3,2],[0,4,1],[0,5,1],[2,6,1],[2,7,1]]},"HCN":{"k":"mol","n":"","a":[["C",-0.03,-0.0,0.0],["N",1.13,0.02,0.0],["H",-1.1,-0.02,0.0]],"b":[[0,1,3],[0,2,1]]},"NO2":{"k":"mol","n":"","a":[["O",1.16,-0.24,0.0],["N",-0.02,0.56,0.0],["O",-1.15,-0.31,0.0]],"b":[[0,1,1],[1,2,2]]},"N2O":{"k":"mol","n":"","a":[["N",1.45,0.07,0.0],["N",-0.01,-0.0,0.0],["O",-1.43,-0.07,0.0]],"b":[[0,1,2],[1,2,2]]},"HNO3":{"k":"mol","n":"","a":[["O",0.7,-0.75,-0.14],["N",-0.41,0.05,0.04],["O",-1.48,-0.54,0.09],["O",-0.12,1.24,0.13],["H",1.32,-0.0,-0.12]],"b":[[0,1,1],[1,2,2],[1,3,1],[0,4,1]]},"H2SO4":{"k":"mol","n":"","a":[["O",-0.73,1.11,0.3],["S",-0.25,-0.38,-0.04],["O",-0.8,-0.71,-1.32],["O",-0.42,-1.19,1.15],["O",1.33,-0.17,-0.21],["H",-0.87,1.57,-0.56],["H",1.73,-0.23,0.68]],"b":[[0,1,1],[1,2,2],[1,3,2],[1,4,1],[0,5,1],[4,6,1]]},"SO2":{"k":"mol","n":"","a":[["O",-1.37,0.36,0.0],["S",-0.02,-0.61,0.0],["O",1.39,0.25,0.0]],"b":[[0,1,2],[1,2,2]]},"H2S":{"k":"mol","n":"","a":[["S",-0.04,0.61,0.0],["H",-0.96,-0.36,0.0],["H",0.99,-0.25,0.0]],"b":[[0,1,1],[0,2,1]]},"HCl":{"k":"mol","n":"","a":[["Cl",0.69,0.0,0.0],["H",-0.69,0.0,0.0]],"b":[[0,1,1]]},"HF":{"k":"mol","n":"","a":[["F",0.49,0.0,0.0],["H",-0.49,0.0,0.0]],"b":[[0,1,1]]},"NaCl":{"k":"crystal","n":"암염형(NaCl형) 결정","a":[["Na",-2.82,-2.82,-2.82],["Na",0.0,0.0,-2.82],["Na",0.0,-2.82,0.0],["Na",-2.82,0.0,0.0],["Cl",0.0,-2.82,-2.82],["Cl",-2.82,0.0,-2.82],["Cl",-2.82,-2.82,0.0],["Cl",0.0,0.0,0.0],["Na",-2.82,-2.82,2.82],["Na",0.0,0.0,2.82],["Cl",0.0,-2.82,2.82],["Cl",-2.82,0.0,2.82],["Na",-2.82,2.82,-2.82],["Na",0.0,2.82,0.0],["Cl",0.0,2.82,-2.82],["Cl",-2.82,2.82,0.0],["Na",-2.82,2.82,2.82],["Cl",0.0,2.82,2.82],["Na",2.82,-2.82,-2.82],["Na",2.82,0.0,0.0],["Cl",2.82,0.0,-2.82],["Cl",2.82,-2.82,0.0],["Na",2.82,-2.82,2.82],["Cl",2.82,0.0,2.82],["Na",2.82,2.82,-2.82],["Cl",2.82,2.82,0.0],["Na",2.82,2.82,2.82]],"b":[[0,4,1],[0,5,1],[0,6,1],[1,4,1],[1,5,1],[1,7,1],[1,14,1],[1,20,1],[2,4,1],[2,6,1],[2,7,1],[2,10,1],[2,21,1],[3,5,1],[3,6,1],[3,7,1],[3,11,1],[3,15,1],[4,18,1],[5,12,1],[6,8,1],[7,9,1],[7,13,1],[7,19,1],[8,10,1],[8,11,1],[9,10,1],[9,11,1],[9,17,1],[9,23,1],[10,22,1],[11,16,1],[12,14,1],[12,15,1],[13,14,1],[13,15,1],[13,17,1],[13,25,1],[14,24,1],[15,16,1],[16,17,1],[17,26,1],[18,20,1],[18,21,1],[19,20,1],[19,21,1],[19,23,1],[19,25,1],[20,24,1],[21,22,1],[22,23,1],[23,26,1],[24,25,1],[25,26,1]]},"KCl":{"k":"crystal","n":"암염형(NaCl형) 결정","a":[["K",-3.15,-3.15,-3.15],["K",-0.0,-0.0,-3.15],["K",-0.0,-3.15,-0.0],["K",-3.15,-0.0,-0.0],["Cl",-0.0,-3.15,-3.15],["Cl",-3.15,-0.0,-3.15],["Cl",-3.15,-3.15,-0.0],["Cl",-0.0,-0.0,-0.0],["K",-3.15,-3.15,3.14],["K",-0.0,-0.0,3.14],["Cl",-0.0,-3.15,3.14],["Cl",-3.15,-0.0,3.14],["K",-3.15,3.14,-3.15],["K",-0.0,3.14,-0.0],["Cl",-0.0,3.14,-3.15],["Cl",-3.15,3.14,-0.0],["K",-3.15,3.14,3.14],["Cl",-0.0,3.14,3.14],["K",3.14,-3.15,-3.15],["K",3.14,-0.0,-0.0],["Cl",3.14,-0.0,-3.15],["Cl",3.14,-3.15,-0.0],["K",3.14,-3.15,3.14],["Cl",3.14,-0.0,3.14],["K",3.14,3.14,-3.15],["Cl",3.14,3.14,-0.0],["K",3.14,3.14,3.14]],"b":[[0,4,1],[0,5,1],[0,6,1],[1,4,1],[1,5,1],[1,7,1],[1,14,1],[1,20,1],[2,4,1],[2,6,1],[2,7,1],[2,10,1],[2,21,1],[3,5,1],[3,6,1],[3,7,1],[3,11,1],[3,15,1],[4,18,1],[5,12,1],[6,8,1],[7,9,1],[7,13,1],[7,19,1],[8,10,1],[8,11,1],[9,10,1],[9,11,1],[9,17,1],[9,23,1],[10,22,1],[11,16,1],[12,14,1],[12,15,1],[13,14,1],[13,15,1],[13,17,1],[13,25,1],[14,24,1],[15,16,1],[16,17,1],[17,26,1],[18,20,1],[18,21,1],[19,20,1],[19,21,1],[19,23,1],[19,25,1],[20,24,1],[21,22,1],[22,23,1],[23,26,1],[24,25,1],[25,26,1]]},"NaOH":{"k":"ion","n":"","a":[["Na",0.0,0.0,0.0],["O",3.89,0.0,0.4],["H",2.91,0.0,0.4]],"b":[[1,2,1]]},"KOH":{"k":"ion","n":"","a":[["K",0.0,0.0,0.0],["O",3.89,0.0,0.4],["H",2.91,0.0,0.4]],"b":[[1,2,1]]},"Ca(OH)2":{"k":"ion","n":"","a":[["Ca",0.0,0.0,0.0],["O",3.89,0.0,0.4],["H",2.91,0.0,0.4],["O",-2.91,0.0,-0.4],["H",-3.89,0.0,-0.4]],"b":[[1,2,1],[3,4,1]]},"CaO":{"k":"crystal","n":"암염형(NaCl형) 결정","a":[["Ca",-2.41,-2.41,-2.41],["Ca",-0.0,-0.0,-2.41],["Ca",-0.0,-2.41,-0.0],["Ca",-2.41,-0.0,-0.0],["O",-0.0,-2.41,-2.41],["O",-2.41,-0.0,-2.41],["O",-2.41,-2.41,-0.0],["O",-0.0,-0.0,-0.0],["Ca",-2.41,-2.41,2.4],["Ca",-0.0,-0.0,2.4],["O",-0.0,-2.41,2.4],["O",-2.41,-0.0,2.4],["Ca",-2.41,2.4,-2.41],["Ca",-0.0,2.4,-0.0],["O",-0.0,2.4,-2.41],["O",-2.41,2.4,-0.0],["Ca",-2.41,2.4,2.4],["O",-0.0,2.4,2.4],["Ca",2.4,-2.41,-2.41],["Ca",2.4,-0.0,-0.0],["O",2.4,-0.0,-2.41],["O",2.4,-2.41,-0.0],["Ca",2.4,-2.41,2.4],["O",2.4,-0.0,2.4],["Ca",2.4,2.4,-2.41],["O",2.4,2.4,-0.0],["Ca",2.4,2.4,2.4]],"b":[[0,4,1],[0,5,1],[0,6,1],[1,4,1],[1,5,1],[1,7,1],[1,14,1],[1,20,1],[2,4,1],[2,6,1],[2,7,1],[2,10,1],[2,21,1],[3,5,1],[3,6,1],[3,7,1],[3,11,1],[3,15,1],[4,18,1],[5,12,1],[6,8,1],[7,9,1],[7,13,1],[7,19,1],[8,10,1],[8,11,1],[9,10,1],[9,11,1],[9,17,1],[9,23,1],[10,22,1],[11,16,1],[12,14,1],[12,15,1],[13,14,1],[13,15,1],[13,17,1],[13,25,1],[14,24,1],[15,16,1],[16,17,1],[17,26,1],[18,20,1],[18,21,1],[19,20,1],[19,21,1],[19,23,1],[19,25,1],[20,24,1],[21,22,1],[22,23,1],[23,26,1],[24,25,1],[25,26,1]]},"CaCO3":{"k":"ion","n":"","a":[["O",-0.67,-1.2,-0.0],["C",0.03,-0.0,0.0],["O",-0.65,1.21,-0.0],["O",1.29,-0.01,0.0],["Ca",4.37,0.0,0.4]],"b":[[0,1,1],[1,2,1],[1,3,2]]},"NaHCO3":{"k":"ion","n":"","a":[["O",0.66,-0.72,0.3],["C",-0.38,0.01,-0.09],["O",-1.48,-0.57,-0.23],["O",-0.04,1.21,-0.25],["H",1.24,0.06,0.28],["Na",4.6,0.0,0.4]],"b":[[0,1,1],[1,2,1],[1,3,2],[0,4,1]]},"Na2CO3":{"k":"ion","n":"","a":[["O",-0.67,-1.2,-0.0],["C",0.03,-0.0,0.0],["O",-0.65,1.21,-0.0],["O",1.29,-0.01,0.0],["Na",4.37,0.0,0.4],["Na",-4.37,0.0,-0.4]],"b":[[0,1,1],[1,2,1],[1,3,2]]},"KNO3":{"k":"ion","n":"","a":[["O",1.1,-0.57,-0.06],["N",-0.0,-0.0,-0.0],["O",-0.06,1.24,0.0],["O",-1.04,-0.67,0.05],["K",4.24,0.0,0.4]],"b":[[0,1,1],[1,2,2],[1,3,1]]},"NH4NO3":{"k":"ion","n":"","a":[["O",1.1,-0.57,-0.06],["N",-0.0,-0.0,-0.0],["O",-0.06,1.24,0.0],["O",-1.04,-0.67,0.05],["N",4.24,0.0,0.4],["H",3.57,-0.27,-0.33],["H",4.33,1.02,0.41],["H",3.91,-0.32,1.31],["H",5.16,-0.42,0.2]],"b":[[0,1,1],[1,2,2],[1,3,1],[4,5,1],[4,6,1],[4,7,1],[4,8,1]]},"NH4Cl":{"k":"ion","n":"","a":[["N",0.0,0.0,0.0],["H",-0.67,-0.27,-0.73],["H",0.09,1.02,0.01],["H",-0.34,-0.32,0.91],["H",0.91,-0.42,-0.2],["Cl",4.03,0.0,0.4]],"b":[[0,1,1],[0,2,1],[0,3,1],[0,4,1]]},"MgO":{"k":"crystal","n":"암염형(NaCl형) 결정","a":[["Mg",-2.11,-2.1,-2.1],["Mg",-0.0,0.0,-2.1],["Mg",-0.0,-2.1,0.0],["Mg",-2.11,0.0,0.0],["O",-0.0,-2.1,-2.1],["O",-2.11,0.0,-2.1],["O",-2.11,-2.1,0.0],["O",-0.0,0.0,0.0],["Mg",-2.11,-2.1,2.1],["Mg",-0.0,0.0,2.1],["O",-0.0,-2.1,2.1],["O",-2.11,0.0,2.1],["Mg",-2.11,2.1,-2.1],["Mg",-0.0,2.1,0.0],["O",-0.0,2.1,-2.1],["O",-2.11,2.1,0.0],["Mg",-2.11,2.1,2.1],["O",-0.0,2.1,2.1],["Mg",2.1,-2.1,-2.1],["Mg",2.1,0.0,0.0],["O",2.1,0.0,-2.1],["O",2.1,-2.1,0.0],["Mg",2.1,-2.1,2.1],["O",2.1,0.0,2.1],["Mg",2.1,2.1,-2.1],["O",2.1,2.1,0.0],["Mg",2.1,2.1,2.1]],"b":[[0,4,1],[0,5,1],[0,6,1],[1,4,1],[1,5,1],[1,7,1],[1,14,1],[1,20,1],[2,4,1],[2,6,1],[2,7,1],[2,10,1],[2,21,1],[3,5,1],[3,6,1],[3,7,1],[3,11,1],[3,15,1],[4,18,1],[5,12,1],[6,8,1],[7,9,1],[7,13,1],[7,19,1],[8,10,1],[8,11,1],[9,10,1],[9,11,1],[9,17,1],[9,23,1],[10,22,1],[11,16,1],[12,14,1],[12,15,1],[13,14,1],[13,15,1],[13,17,1],[13,25,1],[14,24,1],[15,16,1],[16,17,1],[17,26,1],[18,20,1],[18,21,1],[19,20,1],[19,21,1],[19,23,1],[19,25,1],[20,24,1],[21,22,1],[22,23,1],[23,26,1],[24,25,1],[25,26,1]]},"MgSO4":{"k":"ion","n":"","a":[["O",-1.17,-0.9,-0.09],["S",-0.0,0.0,0.0],["O",-0.11,1.05,-1.02],["O",0.04,0.62,1.34],["O",1.23,-0.78,-0.22],["Mg",4.47,0.0,0.4]],"b":[[0,1,1],[1,2,2],[1,3,2],[1,4,1]]},"MgCl2":{"k":"ion","n":"","a":[["Mg",0.0,0.0,0.0],["Cl",3.4,0.0,0.4],["Cl",-3.4,0.0,-0.4]],"b":[]},"Al2O3":{"k":"unit","n":"","a":[["O",0.0,0.9,0.0],["Al",-1.75,0.0,0.0],["Al",1.75,0.0,0.0],["O",-2.9,-1.4,0.0],["O",2.9,-1.4,0.0]],"b":[[0,1,1],[0,2,1],[1,3,2],[2,4,2]]},"AlCl3":{"k":"mol","n":"기체 상태의 Al₂Cl₆ 이량체","a":[["Al",-1.62,0.0,0.0],["Al",1.62,0.0,0.0],["Cl",0.0,0.0,1.62],["Cl",0.0,0.0,-1.62],["Cl",-2.8,1.7,0.0],["Cl",-2.8,-1.7,0.0],["Cl",2.8,1.7,0.0],["Cl",2.8,-1.7,0.0]],"b":[[0,2,1],[0,3,1],[1,2,1],[1,3,1],[0,4,1],[0,5,1],[1,6,1],[1,7,1]]},"SiO2":{"k":"unit","n":"석영을 이루는 SiO₄ 사면체 단위","a":[["O",1.68,-0.18,0.29],["Si",0.0,0.0,-0.0],["O",-0.34,1.63,-0.41],["O",-0.87,-0.43,1.41],["O",-0.47,-1.03,-1.29]],"b":[[0,1,1],[1,2,1],[1,3,1],[1,4,1]]},"SiC":{"k":"crystal","n":"섬아연석형 결정","a":[["Si",-2.18,-2.18,-2.18],["Si",0.0,0.0,-2.18],["Si",0.0,-2.18,0.0],["Si",-2.18,0.0,0.0],["C",-1.09,-1.09,-1.09],["C",1.09,1.09,-1.09],["C",1.09,-1.09,1.09],["C",-1.09,1.09,1.09],["Si",0.0,0.0,2.18],["Si",0.0,2.18,0.0],["Si",-2.18,2.18,2.18],["Si",2.18,0.0,0.0],["Si",2.18,-2.18,2.18],["Si",2.18,2.18,-2.18]],"b":[[0,4,1],[1,4,1],[1,5,1],[2,4,1],[2,6,1],[3,4,1],[3,7,1],[5,9,1],[5,11,1],[5,13,1],[6,8,1],[6,11,1],[6,12,1],[7,8,1],[7,9,1],[7,10,1]]},"Si3N4":{"k":"unit","n":"","a":[["N",-1.09,1.07,0.37],["Si",0.58,1.36,0.48],["Si",-1.47,0.29,-1.12],["N",-1.03,-1.15,-0.28],["Si",-1.43,-0.4,1.21],["Si",0.65,-1.37,-0.32],["N",1.41,0.13,-0.32],["H",2.38,0.07,-0.01]],"b":[[0,1,1],[0,2,1],[2,3,1],[3,4,1],[3,5,1],[5,6,1],[4,0,1],[6,1,1],[6,7,1]]},"Fe2O3":{"k":"unit","n":"","a":[["O",0.0,0.9,0.0],["Fe",-1.75,0.0,0.0],["Fe",1.75,0.0,0.0],["O",-2.9,-1.4,0.0],["O",2.9,-1.4,0.0]],"b":[[0,1,1],[0,2,1],[1,3,2],[2,4,2]]},"Fe3O4":{"k":"unit","n":"","a":[["O",1.3,1.32,0.51],["Fe",1.18,-0.31,0.68],["O",0.45,-0.71,2.33],["Fe",-0.09,-0.38,0.39],["O",0.09,-0.47,-2.28],["Fe",-1.07,0.68,-1.42],["O",-1.85,-0.13,-0.21]],"b":[[0,1,2],[1,2,1],[2,3,1],[3,4,1],[4,5,1],[5,6,2]]},"FeS2":{"k":"ion","n":"","a":[["S",1.03,0.0,0.0],["S",-1.03,0.0,0.0],["Fe",4.03,0.0,0.4]],"b":[[0,1,1]]},"FeCl3":{"k":"ion","n":"","a":[["Fe",0.0,0.0,0.0],["Cl",4.0,0.0,0.4],["Cl",-2.0,3.46,-0.4],["Cl",-2.0,-3.46,0.4]],"b":[]},"CuO":{"k":"unit","n":"","a":[["Cu",0.81,0.0,0.0],["O",-0.81,0.0,0.0]],"b":[[0,1,2]]},"CuSO4":{"k":"ion","n":"","a":[["O",-1.17,-0.9,-0.09],["S",-0.0,0.0,0.0],["O",-0.11,1.05,-1.02],["O",0.04,0.62,1.34],["O",1.23,-0.78,-0.22],["Cu",4.47,0.0,0.4]],"b":[[0,1,1],[1,2,2],[1,3,2],[1,4,1]]},"CuCl2":{"k":"ion","n":"","a":[["Cu",0.0,0.0,0.0],["Cl",3.4,0.0,0.4],["Cl",-3.4,0.0,-0.4]],"b":[]},"Cu2CO3(OH)2":{"k":"ion","n":"","a":[["O",-0.67,-1.2,-0.0],["C",0.03,-0.0,0.0],["O",-0.65,1.21,-0.0],["O",1.29,-0.01,0.0],["Cu",4.6,0.0,0.4],["Cu",0.0,4.6,-0.4],["O",-4.11,0.0,0.4],["H",-5.09,0.0,0.4],["O",0.49,-4.6,-0.4],["H",-0.49,-4.6,-0.4]],"b":[[0,1,1],[1,2,1],[1,3,2],[6,7,1],[8,9,1]]},"CuFeS2":{"k":"unit","n":"","a":[["S",-1.65,-1.58,0.34],["Cu",-1.9,0.81,-0.74],["S",-0.0,1.64,0.35],["Fe",1.24,-0.01,-0.63],["S",2.31,-0.85,0.67]],"b":[[0,1,2],[1,2,1],[2,3,1],[3,4,2]]},"ZnO":{"k":"crystal","n":"우르차이트형 결정","a":[["Zn",-1.53,-0.99,-5.5],["Zn",0.09,-1.93,-2.89],["O",-1.53,-0.99,-3.55],["O",0.09,-1.93,-0.94],["Zn",-1.53,-0.99,-0.29],["Zn",0.09,-1.93,2.32],["O",-1.53,-0.99,1.66],["O",0.09,-1.93,4.27],["Zn",-1.53,-0.99,4.92],["Zn",-3.16,1.82,-5.5],["Zn",-1.53,0.89,-2.89],["O",-3.16,1.82,-3.55],["O",-1.53,0.89,-0.94],["Zn",-3.16,1.82,-0.29],["Zn",-1.53,0.89,2.32],["O",-3.16,1.82,1.66],["O",-1.53,0.89,4.27],["Zn",-3.16,1.82,4.92],["Zn",1.72,-0.99,-5.5],["Zn",3.34,-1.93,-2.89],["O",1.72,-0.99,-3.55],["O",3.34,-1.93,-0.94],["Zn",1.72,-0.99,-0.29],["Zn",3.34,-1.93,2.32],["O",1.72,-0.99,1.66],["O",3.34,-1.93,4.27],["Zn",1.72,-0.99,4.92],["Zn",0.09,1.82,-5.5],["Zn",1.72,0.89,-2.89],["O",0.09,1.82,-3.55],["O",1.72,0.89,-0.94],["Zn",0.09,1.82,-0.29],["Zn",1.72,0.89,2.32],["O",0.09,1.82,1.66],["O",1.72,0.89,4.27],["Zn",0.09,1.82,4.92]],"b":[[0,2,1],[1,2,1],[1,3,1],[1,20,1],[2,10,1],[3,4,1],[3,22,1],[4,6,1],[4,12,1],[5,6,1],[5,7,1],[5,24,1],[6,14,1],[7,8,1],[7,26,1],[8,16,1],[9,11,1],[10,11,1],[10,12,1],[10,29,1],[12,13,1],[12,31,1],[13,15,1],[14,15,1],[14,16,1],[14,33,1],[16,17,1],[16,35,1],[18,20,1],[19,20,1],[19,21,1],[20,28,1],[21,22,1],[22,24,1],[22,30,1],[23,24,1],[23,25,1],[24,32,1],[25,26,1],[26,34,1],[27,29,1],[28,29,1],[28,30,1],[30,31,1],[31,33,1],[32,33,1],[32,34,1],[34,35,1]]},"ZnS":{"k":"crystal","n":"섬아연석형 결정","a":[["Zn",-2.71,-2.71,-2.71],["Zn",0.0,0.0,-2.71],["Zn",0.0,-2.71,0.0],["Zn",-2.71,0.0,0.0],["S",-1.35,-1.35,-1.35],["S",1.35,1.35,-1.35],["S",1.35,-1.35,1.35],["S",-1.35,1.35,1.35],["Zn",0.0,0.0,2.71],["Zn",0.0,2.71,0.0],["Zn",-2.71,2.71,2.71],["Zn",2.71,0.0,0.0],["Zn",2.71,-2.71,2.71],["Zn",2.71,2.71,-2.71]],"b":[[0,4,1],[1,4,1],[1,5,1],[2,4,1],[2,6,1],[3,4,1],[3,7,1],[5,9,1],[5,11,1],[5,13,1],[6,8,1],[6,11,1],[6,12,1],[7,8,1],[7,9,1],[7,10,1]]},"AgCl":{"k":"crystal","n":"암염형(NaCl형) 결정","a":[["Ag",-2.77,-2.77,-2.77],["Ag",0.0,0.0,-2.77],["Ag",0.0,-2.77,0.0],["Ag",-2.77,0.0,0.0],["Cl",0.0,-2.77,-2.77],["Cl",-2.77,0.0,-2.77],["Cl",-2.77,-2.77,0.0],["Cl",0.0,0.0,0.0],["Ag",-2.77,-2.77,2.78],["Ag",0.0,0.0,2.78],["Cl",0.0,-2.77,2.78],["Cl",-2.77,0.0,2.78],["Ag",-2.77,2.78,-2.77],["Ag",0.0,2.78,0.0],["Cl",0.0,2.78,-2.77],["Cl",-2.77,2.78,0.0],["Ag",-2.77,2.78,2.78],["Cl",0.0,2.78,2.78],["Ag",2.78,-2.77,-2.77],["Ag",2.78,0.0,0.0],["Cl",2.78,0.0,-2.77],["Cl",2.78,-2.77,0.0],["Ag",2.78,-2.77,2.78],["Cl",2.78,0.0,2.78],["Ag",2.78,2.78,-2.77],["Cl",2.78,2.78,0.0],["Ag",2.78,2.78,2.78]],"b":[[0,4,1],[0,5,1],[0,6,1],[1,4,1],[1,5,1],[1,7,1],[1,14,1],[1,20,1],[2,4,1],[2,6,1],[2,7,1],[2,10,1],[2,21,1],[3,5,1],[3,6,1],[3,7,1],[3,11,1],[3,15,1],[4,18,1],[5,12,1],[6,8,1],[7,9,1],[7,13,1],[7,19,1],[8,10,1],[8,11,1],[9,10,1],[9,11,1],[9,17,1],[9,23,1],[10,22,1],[11,16,1],[12,14,1],[12,15,1],[13,14,1],[13,15,1],[13,17,1],[13,25,1],[14,24,1],[15,16,1],[16,17,1],[17,26,1],[18,20,1],[18,21,1],[19,20,1],[19,21,1],[19,23,1],[19,25,1],[20,24,1],[21,22,1],[22,23,1],[23,26,1],[24,25,1],[25,26,1]]},"AgBr":{"k":"crystal","n":"암염형(NaCl형) 결정","a":[["Ag",-2.88,-2.88,-2.88],["Ag",0.0,0.0,-2.88],["Ag",0.0,-2.88,0.0],["Ag",-2.88,0.0,0.0],["Br",0.0,-2.88,-2.88],["Br",-2.88,0.0,-2.88],["Br",-2.88,-2.88,0.0],["Br",0.0,0.0,0.0],["Ag",-2.88,-2.88,2.89],["Ag",0.0,0.0,2.89],["Br",0.0,-2.88,2.89],["Br",-2.88,0.0,2.89],["Ag",-2.88,2.89,-2.88],["Ag",0.0,2.89,0.0],["Br",0.0,2.89,-2.88],["Br",-2.88,2.89,0.0],["Ag",-2.88,2.89,2.89],["Br",0.0,2.89,2.89],["Ag",2.89,-2.88,-2.88],["Ag",2.89,0.0,0.0],["Br",2.89,0.0,-2.88],["Br",2.89,-2.88,0.0],["Ag",2.89,-2.88,2.89],["Br",2.89,0.0,2.89],["Ag",2.89,2.89,-2.88],["Br",2.89,2.89,0.0],["Ag",2.89,2.89,2.89]],"b":[[0,4,1],[0,5,1],[0,6,1],[1,4,1],[1,5,1],[1,7,1],[1,14,1],[1,20,1],[2,4,1],[2,6,1],[2,7,1],[2,10,1],[2,21,1],[3,5,1],[3,6,1],[3,7,1],[3,11,1],[3,15,1],[4,18,1],[5,12,1],[6,8,1],[7,9,1],[7,13,1],[7,19,1],[8,10,1],[8,11,1],[9,10,1],[9,11,1],[9,17,1],[9,23,1],[10,22,1],[11,16,1],[12,14,1],[12,15,1],[13,14,1],[13,15,1],[13,17,1],[13,25,1],[14,24,1],[15,16,1],[16,17,1],[17,26,1],[18,20,1],[18,21,1],[19,20,1],[19,21,1],[19,23,1],[19,25,1],[20,24,1],[21,22,1],[22,23,1],[23,26,1],[24,25,1],[25,26,1]]},"AgNO3":{"k":"ion","n":"","a":[["O",1.1,-0.57,-0.06],["N",-0.0,-0.0,-0.0],["O",-0.06,1.24,0.0],["O",-1.04,-0.67,0.05],["Ag",4.24,0.0,0.4]],"b":[[0,1,1],[1,2,2],[1,3,1]]},"AuCl3":{"k":"mol","n":"실제로는 Au₂Cl₆ 이량체로 존재","a":[["Au",-1.7,0.0,0.0],["Au",1.7,0.0,0.0],["Cl",0.0,1.6,0.0],["Cl",0.0,-1.6,0.0],["Cl",-3.3,1.6,0.0],["Cl",-3.3,-1.6,0.0],["Cl",3.3,1.6,0.0],["Cl",3.3,-1.6,0.0]],"b":[[0,2,1],[0,3,1],[1,2,1],[1,3,1],[0,4,1],[0,5,1],[1,6,1],[1,7,1]]},"PbS":{"k":"crystal","n":"암염형(NaCl형) 결정","a":[["Pb",-2.97,-2.97,-2.97],["Pb",0.0,0.0,-2.97],["Pb",0.0,-2.97,0.0],["Pb",-2.97,0.0,0.0],["S",0.0,-2.97,-2.97],["S",-2.97,0.0,-2.97],["S",-2.97,-2.97,0.0],["S",0.0,0.0,0.0],["Pb",-2.97,-2.97,2.97],["Pb",0.0,0.0,2.97],["S",0.0,-2.97,2.97],["S",-2.97,0.0,2.97],["Pb",-2.97,2.97,-2.97],["Pb",0.0,2.97,0.0],["S",0.0,2.97,-2.97],["S",-2.97,2.97,0.0],["Pb",-2.97,2.97,2.97],["S",0.0,2.97,2.97],["Pb",2.97,-2.97,-2.97],["Pb",2.97,0.0,0.0],["S",2.97,0.0,-2.97],["S",2.97,-2.97,0.0],["Pb",2.97,-2.97,2.97],["S",2.97,0.0,2.97],["Pb",2.97,2.97,-2.97],["S",2.97,2.97,0.0],["Pb",2.97,2.97,2.97]],"b":[[0,4,1],[0,5,1],[0,6,1],[1,4,1],[1,5,1],[1,7,1],[1,14,1],[1,20,1],[2,4,1],[2,6,1],[2,7,1],[2,10,1],[2,21,1],[3,5,1],[3,6,1],[3,7,1],[3,11,1],[3,15,1],[4,18,1],[5,12,1],[6,8,1],[7,9,1],[7,13,1],[7,19,1],[8,10,1],[8,11,1],[9,10,1],[9,11,1],[9,17,1],[9,23,1],[10,22,1],[11,16,1],[12,14,1],[12,15,1],[13,14,1],[13,15,1],[13,17,1],[13,25,1],[14,24,1],[15,16,1],[16,17,1],[17,26,1],[18,20,1],[18,21,1],[19,20,1],[19,21,1],[19,23,1],[19,25,1],[20,24,1],[21,22,1],[22,23,1],[23,26,1],[24,25,1],[25,26,1]]},"HgS":{"k":"unit","n":"","a":[["Hg",1.0,0.0,0.0],["S",-1.0,0.0,0.0]],"b":[[0,1,2]]},"TiO2":{"k":"crystal","n":"루틸형 결정","a":[["Ti",-2.29,-2.29,-1.48],["Ti",0.0,0.0,-0.0],["O",-0.9,-0.9,-1.48],["O",0.9,0.9,-1.48],["O",1.4,-1.4,-0.0],["O",-1.4,1.4,-0.0],["Ti",-2.29,-2.29,1.48],["O",-0.9,-0.9,1.48],["O",0.9,0.9,1.48],["Ti",-2.29,2.29,-1.48],["Ti",-2.29,2.29,1.48],["Ti",2.29,-2.29,-1.48],["Ti",2.29,-2.29,1.48],["Ti",2.29,2.29,-1.48],["Ti",2.29,2.29,1.48]],"b":[[0,2,1],[1,2,1],[1,3,1],[1,4,1],[1,5,1],[1,7,1],[1,8,1],[3,13,1],[4,11,1],[4,12,1],[5,9,1],[5,10,1],[6,7,1],[8,14,1]]},"CaF2":{"k":"crystal","n":"형석형 결정","a":[["Ca",-2.73,-2.73,-2.73],["Ca",0.0,0.0,-2.73],["Ca",0.0,-2.73,0.0],["Ca",-2.73,0.0,0.0],["F",-1.36,-1.36,-1.36],["F",-1.36,-1.36,1.37],["F",-1.36,1.36,-1.36],["F",-1.36,1.36,1.37],["F",1.36,-1.36,-1.36],["F",1.36,-1.36,1.37],["F",1.36,1.36,-1.36],["F",1.36,1.36,1.37],["Ca",-2.73,-2.73,2.73],["Ca",0.0,0.0,2.73],["Ca",-2.73,2.73,-2.73],["Ca",0.0,2.73,0.0],["Ca",-2.73,2.73,2.73],["Ca",2.73,-2.73,-2.73],["Ca",2.73,0.0,0.0],["Ca",2.73,-2.73,2.73],["Ca",2.73,2.73,-2.73],["Ca",2.73,2.73,2.73]],"b":[[0,4,1],[1,4,1],[1,6,1],[1,8,1],[1,10,1],[2,4,1],[2,5,1],[2,8,1],[2,9,1],[3,4,1],[3,5,1],[3,6,1],[3,7,1],[5,12,1],[5,13,1],[6,14,1],[6,15,1],[7,13,1],[7,15,1],[7,16,1],[8,17,1],[8,18,1],[9,13,1],[9,18,1],[9,19,1],[10,15,1],[10,18,1],[10,20,1],[11,13,1],[11,15,1],[11,18,1],[11,21,1]]},"NaF":{"k":"crystal","n":"암염형(NaCl형) 결정","a":[["Na",-2.32,-2.31,-2.31],["Na",-0.0,0.0,-2.31],["Na",-0.0,-2.31,0.0],["Na",-2.32,0.0,0.0],["F",-0.0,-2.31,-2.31],["F",-2.32,0.0,-2.31],["F",-2.32,-2.31,0.0],["F",-0.0,0.0,0.0],["Na",-2.32,-2.31,2.31],["Na",-0.0,0.0,2.31],["F",-0.0,-2.31,2.31],["F",-2.32,0.0,2.31],["Na",-2.32,2.31,-2.31],["Na",-0.0,2.31,0.0],["F",-0.0,2.31,-2.31],["F",-2.32,2.31,0.0],["Na",-2.32,2.31,2.31],["F",-0.0,2.31,2.31],["Na",2.31,-2.31,-2.31],["Na",2.31,0.0,0.0],["F",2.31,0.0,-2.31],["F",2.31,-2.31,0.0],["Na",2.31,-2.31,2.31],["F",2.31,0.0,2.31],["Na",2.31,2.31,-2.31],["F",2.31,2.31,0.0],["Na",2.31,2.31,2.31]],"b":[[0,4,1],[0,5,1],[0,6,1],[1,4,1],[1,5,1],[1,7,1],[1,14,1],[1,20,1],[2,4,1],[2,6,1],[2,7,1],[2,10,1],[2,21,1],[3,5,1],[3,6,1],[3,7,1],[3,11,1],[3,15,1],[4,18,1],[5,12,1],[6,8,1],[7,9,1],[7,13,1],[7,19,1],[8,10,1],[8,11,1],[9,10,1],[9,11,1],[9,17,1],[9,23,1],[10,22,1],[11,16,1],[12,14,1],[12,15,1],[13,14,1],[13,15,1],[13,17,1],[13,25,1],[14,24,1],[15,16,1],[16,17,1],[17,26,1],[18,20,1],[18,21,1],[19,20,1],[19,21,1],[19,23,1],[19,25,1],[20,24,1],[21,22,1],[22,23,1],[23,26,1],[24,25,1],[25,26,1]]},"CaSO4":{"k":"ion","n":"","a":[["O",-1.17,-0.9,-0.09],["S",-0.0,0.0,0.0],["O",-0.11,1.05,-1.02],["O",0.04,0.62,1.34],["O",1.23,-0.78,-0.22],["Ca",4.47,0.0,0.4]],"b":[[0,1,1],[1,2,2],[1,3,2],[1,4,1]]},"BaSO4":{"k":"ion","n":"","a":[["O",-1.17,-0.9,-0.09],["S",-0.0,0.0,0.0],["O",-0.11,1.05,-1.02],["O",0.04,0.62,1.34],["O",1.23,-0.78,-0.22],["Ba",4.47,0.0,0.4]],"b":[[0,1,1],[1,2,2],[1,3,2],[1,4,1]]},"CaC2":{"k":"ion","n":"","a":[["C",0.77,0.0,0.0],["C",-0.77,0.0,0.0],["Ca",3.77,0.0,0.4]],"b":[[0,1,3]]},"Ca3(PO4)2":{"k":"ion","n":"","a":[["O",1.4,0.26,-0.58],["P",-0.0,-0.0,-0.0],["O",0.11,-0.28,1.51],["O",-0.62,-1.22,-0.7],["O",-0.89,1.23,-0.23],["O",6.0,0.26,-0.18],["P",4.6,-0.0,0.4],["O",4.71,-0.28,1.91],["O",3.98,-1.22,-0.3],["O",3.71,1.23,0.17],["Ca",0.0,4.6,-0.4],["Ca",-4.6,0.0,0.4],["Ca",-0.0,-4.6,-0.4]],"b":[[0,1,1],[1,2,2],[1,3,1],[1,4,1],[5,6,1],[6,7,2],[6,8,1],[6,9,1]]},"Ca5(PO4)3(OH)":{"k":"ion","n":"","a":[["O",1.4,0.26,-0.58],["P",-0.0,-0.0,-0.0],["O",0.11,-0.28,1.51],["O",-0.62,-1.22,-0.7],["O",-0.89,1.23,-0.23],["O",8.4,0.26,-0.18],["P",7.0,-0.0,0.4],["O",7.11,-0.28,1.91],["O",6.38,-1.22,-0.3],["O",6.11,1.23,0.17],["O",6.35,5.21,-0.98],["P",4.95,4.95,-0.4],["O",5.06,4.67,1.11],["O",4.33,3.73,-1.1],["O",4.06,6.18,-0.63],["Ca",0.0,7.0,0.4],["Ca",-4.95,4.95,-0.4],["Ca",-7.0,0.0,0.4],["Ca",-4.95,-4.95,-0.4],["Ca",-0.0,-7.0,0.4],["O",5.44,-4.95,-0.4],["H",4.46,-4.95,-0.4]],"b":[[0,1,1],[1,2,2],[1,3,1],[1,4,1],[5,6,1],[6,7,2],[6,8,1],[6,9,1],[10,11,1],[11,12,2],[11,13,1],[11,14,1],[20,21,1]]},"H3PO4":{"k":"mol","n":"","a":[["O",0.58,-0.03,1.39],["P",0.18,-0.01,-0.15],["O",1.3,-0.04,-1.12],["O",-0.86,-1.2,-0.25],["O",-0.77,1.27,-0.23],["H",1.16,0.71,1.61],["H",-0.42,-2.06,-0.14],["H",-1.16,1.36,-1.12]],"b":[[0,1,1],[1,2,2],[1,3,1],[1,4,1],[0,5,1],[3,6,1],[4,7,1]]},"P4O10":{"k":"mol","n":"","a":[["O",-2.29,-0.35,2.18],["P",-1.21,-0.18,1.16],["O",-0.9,-1.48,0.3],["P",0.21,-1.45,-0.83],["O",0.4,-2.74,-1.56],["O",1.49,-0.93,-0.06],["P",1.44,0.43,0.76],["O",2.72,0.8,1.44],["O",0.21,0.22,1.73],["O",0.9,1.48,-0.3],["P",-0.44,1.21,-1.09],["O",-0.83,2.28,-2.05],["O",-1.49,0.93,0.06],["O",-0.21,-0.22,-1.73]],"b":[[0,1,2],[1,2,1],[2,3,1],[3,4,2],[3,5,1],[5,6,1],[6,7,2],[6,8,1],[6,9,1],[9,10,1],[10,11,2],[10,12,1],[10,13,1],[8,1,1],[12,1,1],[13,3,1]]},"PCl3":{"k":"mol","n":"","a":[["Cl",-1.38,-1.2,-0.26],["P",-0.02,0.02,0.77],["Cl",-0.33,1.79,-0.32],["Cl",1.74,-0.61,-0.19]],"b":[[0,1,1],[1,2,1],[1,3,1]]},"NaClO":{"k":"ion","n":"","a":[["O",0.84,0.0,0.0],["Cl",-0.84,0.0,0.0],["Na",3.84,0.0,0.4]],"b":[[0,1,1]]},"KClO3":{"k":"ion","n":"","a":[["O",1.96,-0.07,-0.0],["Cl",-0.02,0.05,-0.0],["O",-0.81,1.65,-0.02],["O",-1.13,-1.63,0.02],["K",4.98,0.0,0.4]],"b":[[0,1,1],[1,2,1],[1,3,1]]},"KMnO4":{"k":"ion","n":"","a":[["O",0.27,1.55,0.91],["Mn",-0.12,-0.14,-0.18],["O",-0.32,-1.42,0.98],["O",-1.57,0.29,-0.91],["O",1.73,-0.27,-0.8],["K",4.93,0.0,0.4]],"b":[[0,1,1],[1,2,2],[1,3,2],[1,4,2]]},"MnO2":{"k":"crystal","n":"루틸형 결정","a":[["Mn",-2.2,-2.2,-1.44],["Mn",0.0,0.0,0.0],["O",-0.86,-0.86,-1.44],["O",0.86,0.86,-1.44],["O",1.34,-1.34,0.0],["O",-1.34,1.34,0.0],["Mn",-2.2,-2.2,1.44],["O",-0.86,-0.86,1.44],["O",0.86,0.86,1.44],["Mn",-2.2,2.2,-1.44],["Mn",-2.2,2.2,1.44],["Mn",2.2,-2.2,-1.44],["Mn",2.2,-2.2,1.44],["Mn",2.2,2.2,-1.44],["Mn",2.2,2.2,1.44]],"b":[[0,2,1],[1,2,1],[1,3,1],[1,4,1],[1,5,1],[1,7,1],[1,8,1],[3,13,1],[4,11,1],[4,12,1],[5,9,1],[5,10,1],[6,7,1],[8,14,1]]},"Cr2O3":{"k":"unit","n":"","a":[["O",0.0,0.9,0.0],["Cr",-1.75,0.0,0.0],["Cr",1.75,0.0,0.0],["O",-2.9,-1.4,0.0],["O",2.9,-1.4,0.0]],"b":[[0,1,1],[0,2,1],[1,3,2],[2,4,2]]},"K2Cr2O7":{"k":"ion","n":"다이크로뮴산 이온 Cr₂O₇²⁻ + K⁺ 2개","a":[["Cr",-1.63,0.0,0.0],["Cr",1.63,0.0,0.0],["O",0.0,0.65,0.0],["O",-1.57,-1.62,0.0],["O",-2.41,0.51,-1.32],["O",-2.41,0.51,1.32],["O",2.69,1.22,0.0],["O",1.85,-0.91,-1.32],["O",1.85,-0.91,1.32],["K",0.0,-3.6,2.2],["K",0.0,-3.6,-2.2]],"b":[[0,2,1],[1,2,1],[0,3,2],[0,4,2],[0,5,2],[1,6,2],[1,7,2],[1,8,2]]},"LiCl":{"k":"crystal","n":"암염형(NaCl형) 결정","a":[["Li",-2.57,-2.56,-2.56],["Li",-0.0,0.0,-2.56],["Li",-0.0,-2.56,0.0],["Li",-2.57,0.0,0.0],["Cl",-0.0,-2.56,-2.56],["Cl",-2.57,0.0,-2.56],["Cl",-2.57,-2.56,0.0],["Cl",-0.0,0.0,0.0],["Li",-2.57,-2.56,2.56],["Li",-0.0,0.0,2.56],["Cl",-0.0,-2.56,2.56],["Cl",-2.57,0.0,2.56],["Li",-2.57,2.56,-2.56],["Li",-0.0,2.56,0.0],["Cl",-0.0,2.56,-2.56],["Cl",-2.57,2.56,0.0],["Li",-2.57,2.56,2.56],["Cl",-0.0,2.56,2.56],["Li",2.56,-2.56,-2.56],["Li",2.56,0.0,0.0],["Cl",2.56,0.0,-2.56],["Cl",2.56,-2.56,0.0],["Li",2.56,-2.56,2.56],["Cl",2.56,0.0,2.56],["Li",2.56,2.56,-2.56],["Cl",2.56,2.56,0.0],["Li",2.56,2.56,2.56]],"b":[[0,4,1],[0,5,1],[0,6,1],[1,4,1],[1,5,1],[1,7,1],[1,14,1],[1,20,1],[2,4,1],[2,6,1],[2,7,1],[2,10,1],[2,21,1],[3,5,1],[3,6,1],[3,7,1],[3,11,1],[3,15,1],[4,18,1],[5,12,1],[6,8,1],[7,9,1],[7,13,1],[7,19,1],[8,10,1],[8,11,1],[9,10,1],[9,11,1],[9,17,1],[9,23,1],[10,22,1],[11,16,1],[12,14,1],[12,15,1],[13,14,1],[13,15,1],[13,17,1],[13,25,1],[14,24,1],[15,16,1],[16,17,1],[17,26,1],[18,20,1],[18,21,1],[19,20,1],[19,21,1],[19,23,1],[19,25,1],[20,24,1],[21,22,1],[22,23,1],[23,26,1],[24,25,1],[25,26,1]]},"Li2CO3":{"k":"ion","n":"","a":[["O",-0.67,-1.2,-0.0],["C",0.03,-0.0,0.0],["O",-0.65,1.21,-0.0],["O",1.29,-0.01,0.0],["Li",4.37,0.0,0.4],["Li",-4.37,0.0,-0.4]],"b":[[0,1,1],[1,2,1],[1,3,2]]},"LiCoO2":{"k":"ion","n":"","a":[["O",1.51,-0.25,0.0],["Co",-0.04,0.53,-0.0],["O",-1.47,-0.27,-0.0],["Li",4.53,0.0,0.4]],"b":[[0,1,1],[1,2,2]]},"LiFePO4":{"k":"ion","n":"","a":[["O",1.4,0.26,-0.58],["P",-0.0,-0.0,-0.0],["O",0.11,-0.28,1.51],["O",-0.62,-1.22,-0.7],["O",-0.89,1.23,-0.23],["Li",4.54,0.0,0.4],["Fe",-4.54,0.0,-0.4]],"b":[[0,1,1],[1,2,2],[1,3,1],[1,4,1]]},"BN":{"k":"crystal","n":"섬아연석형 결정","a":[["B",-1.81,-1.81,-1.81],["B",-0.0,0.0,-1.81],["B",-0.0,-1.81,0.0],["B",-1.81,0.0,0.0],["N",-0.91,-0.9,-0.9],["N",0.9,0.91,-0.9],["N",0.9,-0.9,0.91],["N",-0.91,0.91,0.91],["B",-0.0,0.0,1.81],["B",-0.0,1.81,0.0],["B",-1.81,1.81,1.81],["B",1.81,0.0,0.0],["B",1.81,-1.81,1.81],["B",1.81,1.81,-1.81]],"b":[[0,4,1],[1,4,1],[1,5,1],[2,4,1],[2,6,1],[3,4,1],[3,7,1],[5,9,1],[5,11,1],[5,13,1],[6,8,1],[6,11,1],[6,12,1],[7,8,1],[7,9,1],[7,10,1]]},"H3BO3":{"k":"mol","n":"","a":[["O",-1.32,-0.73,-0.17],["B",-0.05,-0.05,-0.4],["O",-0.02,1.4,-0.59],["O",1.19,-0.82,-0.46],["H",-1.43,-0.73,0.82],["H",0.1,1.77,0.32],["H",1.52,-0.84,0.48]],"b":[[0,1,1],[1,2,1],[1,3,1],[0,4,1],[2,5,1],[3,6,1]]},"Na2B4O7":{"k":"ion","n":"","a":[["O",-3.02,0.36,0.01],["B",-1.79,0.29,-0.78],["O",-0.9,1.46,-0.79],["B",0.29,1.19,0.08],["O",0.44,2.29,1.05],["O",1.51,1.18,-0.8],["B",2.11,-0.17,-0.79],["O",3.34,-0.39,-0.03],["O",1.22,-1.31,-1.06],["B",0.01,-1.21,-0.17],["O",-0.13,-2.5,0.54],["O",-1.19,-1.02,-1.06],["O",0.15,-0.11,0.86],["H",-3.74,0.51,-0.65],["H",-0.39,2.29,1.59],["H",3.05,-0.46,0.91],["H",-0.95,-2.41,1.09],["Na",6.83,0.0,0.4],["Na",-6.83,0.0,-0.4]],"b":[[0,1,1],[1,2,1],[2,3,1],[3,4,1],[3,5,1],[5,6,1],[6,7,1],[6,8,1],[8,9,1],[9,10,1],[9,11,1],[9,12,1],[11,1,1],[12,3,1],[0,13,1],[4,14,1],[7,15,1],[10,16,1]]},"GaN":{"k":"crystal","n":"우르차이트형 결정","a":[["Ga",-1.51,-0.97,-5.48],["Ga",0.09,-1.89,-2.88],["N",-1.51,-0.97,-3.53],["N",0.09,-1.89,-0.94],["Ga",-1.51,-0.97,-0.29],["Ga",0.09,-1.89,2.31],["N",-1.51,-0.97,1.66],["N",0.09,-1.89,4.25],["Ga",-1.51,-0.97,4.9],["Ga",-3.1,1.79,-5.48],["Ga",-1.51,0.87,-2.88],["N",-3.1,1.79,-3.53],["N",-1.51,0.87,-0.94],["Ga",-3.1,1.79,-0.29],["Ga",-1.51,0.87,2.31],["N",-3.1,1.79,1.66],["N",-1.51,0.87,4.25],["Ga",-3.1,1.79,4.9],["Ga",1.68,-0.97,-5.48],["Ga",3.28,-1.89,-2.88],["N",1.68,-0.97,-3.53],["N",3.28,-1.89,-0.94],["Ga",1.68,-0.97,-0.29],["Ga",3.28,-1.89,2.31],["N",1.68,-0.97,1.66],["N",3.28,-1.89,4.25],["Ga",1.68,-0.97,4.9],["Ga",0.09,1.79,-5.48],["Ga",1.68,0.87,-2.88],["N",0.09,1.79,-3.53],["N",1.68,0.87,-0.94],["Ga",0.09,1.79,-0.29],["Ga",1.68,0.87,2.31],["N",0.09,1.79,1.66],["N",1.68,0.87,4.25],["Ga",0.09,1.79,4.9]],"b":[[0,2,1],[1,2,1],[1,3,1],[1,20,1],[2,10,1],[3,4,1],[3,22,1],[4,6,1],[4,12,1],[5,6,1],[5,7,1],[5,24,1],[6,14,1],[7,8,1],[7,26,1],[8,16,1],[9,11,1],[10,11,1],[10,12,1],[10,29,1],[12,13,1],[12,31,1],[13,15,1],[14,15,1],[14,16,1],[14,33,1],[16,17,1],[16,35,1],[18,20,1],[19,20,1],[19,21,1],[20,28,1],[21,22,1],[22,24,1],[22,30,1],[23,24,1],[23,25,1],[24,32,1],[25,26,1],[26,34,1],[27,29,1],[28,29,1],[28,30,1],[30,31,1],[31,33,1],[32,33,1],[32,34,1],[34,35,1]]},"GaAs":{"k":"crystal","n":"섬아연석형 결정","a":[["Ga",-2.82,-2.83,-2.83],["Ga",0.0,0.0,-2.83],["Ga",0.0,-2.83,0.0],["Ga",-2.82,0.0,0.0],["As",-1.41,-1.41,-1.41],["As",1.41,1.41,-1.41],["As",1.41,-1.41,1.41],["As",-1.41,1.41,1.41],["Ga",0.0,0.0,2.83],["Ga",0.0,2.83,0.0],["Ga",-2.82,2.83,2.83],["Ga",2.83,0.0,0.0],["Ga",2.83,-2.83,2.83],["Ga",2.83,2.83,-2.83]],"b":[[0,4,1],[1,4,1],[1,5,1],[2,4,1],[2,6,1],[3,4,1],[3,7,1],[5,9,1],[5,11,1],[5,13,1],[6,8,1],[6,11,1],[6,12,1],[7,8,1],[7,9,1],[7,10,1]]},"CdTe":{"k":"crystal","n":"섬아연석형 결정","a":[["Cd",-3.24,-3.24,-3.24],["Cd",-0.0,0.0,-3.24],["Cd",-0.0,-3.24,0.0],["Cd",-3.24,0.0,0.0],["Te",-1.62,-1.62,-1.62],["Te",1.62,1.62,-1.62],["Te",1.62,-1.62,1.62],["Te",-1.62,1.62,1.62],["Cd",-0.0,0.0,3.24],["Cd",-0.0,3.24,0.0],["Cd",-3.24,3.24,3.24],["Cd",3.24,0.0,0.0],["Cd",3.24,-3.24,3.24],["Cd",3.24,3.24,-3.24]],"b":[[0,4,1],[1,4,1],[1,5,1],[2,4,1],[2,6,1],[3,4,1],[3,7,1],[5,9,1],[5,11,1],[5,13,1],[6,8,1],[6,11,1],[6,12,1],[7,8,1],[7,9,1],[7,10,1]]},"CdS":{"k":"crystal","n":"섬아연석형 결정","a":[["Cd",-2.91,-2.91,-2.91],["Cd",0.0,-0.0,-2.91],["Cd",0.0,-2.91,-0.0],["Cd",-2.91,-0.0,-0.0],["S",-1.46,-1.46,-1.46],["S",1.46,1.45,-1.46],["S",1.46,-1.46,1.45],["S",-1.46,1.45,1.45],["Cd",0.0,-0.0,2.91],["Cd",0.0,2.91,-0.0],["Cd",-2.91,2.91,2.91],["Cd",2.91,-0.0,-0.0],["Cd",2.91,-2.91,2.91],["Cd",2.91,2.91,-2.91]],"b":[[0,4,1],[1,4,1],[1,5,1],[2,4,1],[2,6,1],[3,4,1],[3,7,1],[5,9,1],[5,11,1],[5,13,1],[6,8,1],[6,11,1],[6,12,1],[7,8,1],[7,9,1],[7,10,1]]},"WC":{"k":"crystal","n":"육방정 결정","a":[["W",-1.29,-2.62,-2.84],["C",-1.29,-0.94,-1.42],["W",-1.29,-2.62,-0.0],["C",-1.29,-0.94,1.42],["W",-1.29,-2.62,2.84],["W",-2.74,-0.1,-2.84],["C",-2.74,1.58,-1.42],["W",-2.74,-0.1,-0.0],["C",-2.74,1.58,1.42],["W",-2.74,-0.1,2.84],["W",-4.2,2.42,-2.84],["W",-4.2,2.42,-0.0],["W",-4.2,2.42,2.84],["W",1.62,-2.62,-2.84],["C",1.62,-0.94,-1.42],["W",1.62,-2.62,-0.0],["C",1.62,-0.94,1.42],["W",1.62,-2.62,2.84],["W",0.17,-0.1,-2.84],["C",0.17,1.58,-1.42],["W",0.17,-0.1,-0.0],["C",0.17,1.58,1.42],["W",0.17,-0.1,2.84],["W",-1.29,2.42,-2.84],["W",-1.29,2.42,-0.0],["W",-1.29,2.42,2.84],["W",3.08,-0.1,-2.84],["W",3.08,-0.1,-0.0],["W",3.08,-0.1,2.84],["W",1.62,2.42,-2.84],["W",1.62,2.42,-0.0],["W",1.62,2.42,2.84]],"b":[[0,1,1],[1,2,1],[1,5,1],[1,7,1],[1,18,1],[1,20,1],[2,3,1],[3,4,1],[3,7,1],[3,9,1],[3,20,1],[3,22,1],[5,6,1],[6,7,1],[6,10,1],[6,11,1],[6,23,1],[6,24,1],[7,8,1],[8,9,1],[8,11,1],[8,12,1],[8,24,1],[8,25,1],[13,14,1],[14,15,1],[14,18,1],[14,20,1],[14,26,1],[14,27,1],[15,16,1],[16,17,1],[16,20,1],[16,22,1],[16,27,1],[16,28,1],[18,19,1],[19,20,1],[19,23,1],[19,24,1],[19,29,1],[19,30,1],[20,21,1],[21,22,1],[21,24,1],[21,25,1],[21,30,1],[21,31,1]]},"MoS2":{"k":"crystal","n":"층상 결정 한 층","a":[["Mo",-3.16,-5.47,0.0],["S",-3.16,-3.65,1.59],["S",-3.16,-3.65,-1.59],["Mo",-4.74,-2.74,0.0],["S",-4.74,-0.91,1.59],["S",-4.74,-0.91,-1.59],["Mo",-6.32,0.0,0.0],["S",-6.32,1.82,1.59],["S",-6.32,1.82,-1.59],["Mo",0.0,-5.47,0.0],["S",0.0,-3.65,1.59],["S",0.0,-3.65,-1.59],["Mo",-1.58,-2.74,0.0],["S",-1.58,-0.91,1.59],["S",-1.58,-0.91,-1.59],["Mo",-3.16,0.0,0.0],["S",-3.16,1.82,1.59],["S",-3.16,1.82,-1.59],["Mo",-4.74,2.74,0.0],["S",-4.74,4.56,1.59],["S",-4.74,4.56,-1.59],["Mo",3.16,-5.47,0.0],["S",3.16,-3.65,1.59],["S",3.16,-3.65,-1.59],["Mo",1.58,-2.74,0.0],["S",1.58,-0.91,1.59],["S",1.58,-0.91,-1.59],["Mo",0.0,0.0,0.0],["S",-0.0,1.82,1.59],["S",-0.0,1.82,-1.59],["Mo",-1.58,2.74,0.0],["S",-1.58,4.56,1.59],["S",-1.58,4.56,-1.59],["Mo",-3.16,5.47,0.0],["Mo",4.74,-2.74,0.0],["S",4.74,-0.91,1.59],["S",4.74,-0.91,-1.59],["Mo",3.16,0.0,0.0],["S",3.16,1.82,1.59],["S",3.16,1.82,-1.59],["Mo",1.58,2.74,0.0],["S",1.58,4.56,1.59],["S",1.58,4.56,-1.59],["Mo",0.0,5.47,0.0],["Mo",6.32,0.0,0.0],["S",6.32,1.82,1.59],["S",6.32,1.82,-1.59],["Mo",4.74,2.74,0.0],["S",4.74,4.56,1.59],["S",4.74,4.56,-1.59],["Mo",3.16,5.47,0.0]],"b":[[0,1,1],[0,2,1],[1,3,1],[1,12,1],[2,3,1],[2,12,1],[3,4,1],[3,5,1],[4,6,1],[4,15,1],[5,6,1],[5,15,1],[6,7,1],[6,8,1],[7,18,1],[8,18,1],[9,10,1],[9,11,1],[10,12,1],[10,24,1],[11,12,1],[11,24,1],[12,13,1],[12,14,1],[13,15,1],[13,27,1],[14,15,1],[14,27,1],[15,16,1],[15,17,1],[16,18,1],[16,30,1],[17,18,1],[17,30,1],[18,19,1],[18,20,1],[19,33,1],[20,33,1],[21,22,1],[21,23,1],[22,24,1],[22,34,1],[23,24,1],[23,34,1],[24,25,1],[24,26,1],[25,27,1],[25,37,1],[26,27,1],[26,37,1],[27,28,1],[27,29,1],[28,30,1],[28,40,1],[29,30,1],[29,40,1],[30,31,1],[30,32,1],[31,33,1],[31,43,1],[32,33,1],[32,43,1],[34,35,1],[34,36,1],[35,37,1],[35,44,1],[36,37,1],[36,44,1],[37,38,1],[37,39,1],[38,40,1],[38,47,1],[39,40,1],[39,47,1],[40,41,1],[40,42,1],[41,43,1],[41,50,1],[42,43,1],[42,50,1],[44,45,1],[44,46,1],[45,47,1],[46,47,1],[47,48,1],[47,49,1],[48,50,1],[49,50,1]]},"UO2":{"k":"crystal","n":"형석형 결정","a":[["U",-2.73,-2.73,-2.73],["U",0.0,0.0,-2.73],["U",0.0,-2.73,0.0],["U",-2.73,0.0,0.0],["O",-1.37,-1.37,-1.37],["O",-1.37,-1.37,1.37],["O",-1.37,1.37,-1.37],["O",-1.37,1.37,1.37],["O",1.37,-1.37,-1.37],["O",1.37,-1.37,1.37],["O",1.37,1.37,-1.37],["O",1.37,1.37,1.37],["U",-2.73,-2.73,2.73],["U",0.0,0.0,2.73],["U",-2.73,2.73,-2.73],["U",0.0,2.73,0.0],["U",-2.73,2.73,2.73],["U",2.73,-2.73,-2.73],["U",2.73,0.0,0.0],["U",2.73,-2.73,2.73],["U",2.73,2.73,-2.73],["U",2.73,2.73,2.73]],"b":[[0,4,1],[1,4,1],[1,6,1],[1,8,1],[1,10,1],[2,4,1],[2,5,1],[2,8,1],[2,9,1],[3,4,1],[3,5,1],[3,6,1],[3,7,1],[5,12,1],[5,13,1],[6,14,1],[6,15,1],[7,13,1],[7,15,1],[7,16,1],[8,17,1],[8,18,1],[9,13,1],[9,18,1],[9,19,1],[10,15,1],[10,18,1],[10,20,1],[11,13,1],[11,15,1],[11,18,1],[11,21,1]]},"UF6":{"k":"mol","n":"","a":[["U",0.0,0.0,0.0],["F",1.99,0.0,0.0],["F",-1.99,0.0,0.0],["F",0.0,1.99,0.0],["F",0.0,-1.99,0.0],["F",0.0,0.0,1.99],["F",0.0,0.0,-1.99]],"b":[[0,1,1],[0,2,1],[0,3,1],[0,4,1],[0,5,1],[0,6,1]]},"XeF2":{"k":"mol","n":"","a":[["Xe",0.0,0.0,0.0],["F",2.0,0.0,0.0],["F",-2.0,0.0,0.0]],"b":[[0,1,1],[0,2,1]]},"XeF4":{"k":"mol","n":"","a":[["Xe",0.0,0.0,0.0],["F",1.95,0.0,0.0],["F",-1.95,0.0,0.0],["F",0.0,1.95,0.0],["F",0.0,-1.95,0.0]],"b":[[0,1,1],[0,2,1],[0,3,1],[0,4,1]]},"KrF2":{"k":"mol","n":"","a":[["Kr",0.0,0.0,0.0],["F",1.89,0.0,0.0],["F",-1.89,0.0,0.0]],"b":[[0,1,1],[0,2,1]]},"SF6":{"k":"mol","n":"","a":[["S",0.0,0.0,0.0],["F",1.56,0.0,0.0],["F",-1.56,0.0,0.0],["F",0.0,1.56,0.0],["F",0.0,-1.56,0.0],["F",0.0,0.0,1.56],["F",0.0,0.0,-1.56]],"b":[[0,1,1],[0,2,1],[0,3,1],[0,4,1],[0,5,1],[0,6,1]]},"NF3":{"k":"mol","n":"","a":[["F",1.28,-0.29,-0.11],["N",-0.0,-0.0,0.33],["F",-0.39,1.25,-0.11],["F",-0.89,-0.96,-0.11]],"b":[[0,1,1],[1,2,1],[1,3,1]]},"CCl4":{"k":"mol","n":"","a":[["Cl",1.36,-1.15,-0.09],["C",-0.0,0.0,0.0],["Cl",0.63,1.67,-0.01],["Cl",-1.07,-0.23,-1.4],["Cl",-0.92,-0.28,1.5]],"b":[[0,1,1],[1,2,1],[1,3,1],[1,4,1]]},"CHCl3":{"k":"mol","n":"","a":[["Cl",-0.8,1.48,-0.44],["C",0.0,0.0,0.12],["Cl",-0.9,-1.43,-0.41],["Cl",1.67,-0.06,-0.48],["H",0.03,0.01,1.21]],"b":[[0,1,1],[1,2,1],[1,3,1],[1,4,1]]},"CF4":{"k":"mol","n":"","a":[["F",-0.04,-1.05,-0.83],["C",-0.0,-0.0,-0.0],["F",-0.14,1.13,-0.71],["F",-1.0,-0.1,0.89],["F",1.18,0.02,0.65]],"b":[[0,1,1],[1,2,1],[1,3,1],[1,4,1]]},"C2F4":{"k":"mol","n":"","a":[["F",-1.3,-0.0,1.21],["C",-0.67,-0.02,0.02],["F",-1.38,-0.09,-1.12],["C",0.67,0.02,-0.02],["F",1.3,0.0,-1.21],["F",1.38,0.09,1.12]],"b":[[0,1,1],[1,2,1],[1,3,2],[3,4,1],[3,5,1]]},"CS2":{"k":"mol","n":"","a":[["S",-1.8,0.09,0.0],["C",0.0,0.0,0.0],["S",1.8,-0.09,0.0]],"b":[[0,1,2],[1,2,2]]},"SnO2":{"k":"crystal","n":"루틸형 결정","a":[["Sn",-2.37,-2.37,-1.59],["Sn",-0.0,0.0,0.0],["O",-0.92,-0.92,-1.59],["O",0.92,0.92,-1.59],["O",1.45,-1.45,0.0],["O",-1.45,1.45,0.0],["Sn",-2.37,-2.37,1.59],["O",-0.92,-0.92,1.59],["O",0.92,0.92,1.59],["Sn",-2.37,2.37,-1.59],["Sn",-2.37,2.37,1.59],["Sn",2.37,-2.37,-1.59],["Sn",2.37,-2.37,1.59],["Sn",2.37,2.37,-1.59],["Sn",2.37,2.37,1.59]],"b":[[0,2,1],[1,2,1],[1,3,1],[1,4,1],[1,5,1],[1,7,1],[1,8,1],[3,13,1],[4,11,1],[4,12,1],[5,9,1],[5,10,1],[6,7,1],[8,14,1]]},"Bi2O3":{"k":"unit","n":"","a":[["O",0.0,0.9,0.0],["Bi",-1.75,0.0,0.0],["Bi",1.75,0.0,0.0],["O",-2.9,-1.4,0.0],["O",2.9,-1.4,0.0]],"b":[[0,1,1],[0,2,1],[1,3,2],[2,4,2]]},"As2O3":{"k":"mol","n":"실제 분자는 As₄O₆ 케이지","a":[["O",1.38,-1.48,-0.23],["As",1.53,-0.32,1.18],["O",1.5,1.33,0.37],["As",0.13,1.8,-0.77],["O",0.12,0.42,-1.99],["As",-0.0,-1.33,-1.44],["O",-1.5,-1.33,-0.37],["As",-1.66,-0.15,1.03],["O",-0.12,-0.42,1.99],["O",-1.38,1.48,0.23]],"b":[[0,1,1],[1,2,1],[2,3,1],[3,4,1],[4,5,1],[5,6,1],[6,7,1],[7,8,1],[7,9,1],[5,0,1],[8,1,1],[9,3,1]]},"YBa2Cu3O7":{"k":"unit","n":"Cu–O 평면과 Y·Ba 이온을 단순화한 모형(실제는 층상 결정)","a":[["Cu",-3.8,0.0,0.0],["Cu",0.0,0.0,0.0],["Cu",3.8,0.0,0.0],["O",-1.9,0.0,0.0],["O",1.9,0.0,0.0],["O",-3.8,1.9,0.0],["O",-3.8,-1.9,0.0],["O",0.0,1.9,0.0],["O",0.0,-1.9,0.0],["O",3.8,1.9,0.0],["O",3.8,-1.9,0.0],["Ba",-1.9,1.9,1.8],["Ba",1.9,-1.9,1.8],["Y",0.0,0.0,-2.6]],"b":[[0,3,1],[1,3,1],[1,4,1],[2,4,1],[0,5,1],[0,6,1],[1,7,1],[1,8,1],[2,9,1],[2,10,1]]},"Nd2Fe14B":{"k":"crystal","n":"결정 조각(단순화) · 실제 결정(68원자 단위세포)에서 붕소 주변을 단순화한 조각","a":[["B",0.0,0.0,0.0],["Fe",1.25,0.0,-1.2],["Fe",1.25,0.0,1.2],["Fe",-0.62,1.08,-1.2],["Fe",-0.62,1.08,1.2],["Fe",-0.63,-1.08,-1.2],["Fe",-0.63,-1.08,1.2],["Nd",1.5,2.6,0.0],["Nd",-3.0,0.0,0.0],["Nd",1.5,-2.6,0.0],["Fe",2.94,1.7,-2.6],["Fe",0.0,3.4,2.6],["Fe",-2.94,1.7,-2.6],["Fe",-2.94,-1.7,2.6],["Fe",-0.0,-3.4,-2.6],["Fe",2.94,-1.7,2.6]],"b":[[0,1,1],[0,2,1],[0,3,1],[0,4,1],[0,5,1],[0,6,1],[1,2,1],[1,3,1],[1,5,1],[1,7,1],[1,9,1],[1,10,1],[2,4,1],[2,6,1],[2,7,1],[2,9,1],[2,15,1],[3,4,1],[3,5,1],[3,7,1],[3,8,1],[3,12,1],[4,6,1],[4,7,1],[4,8,1],[4,11,1],[5,6,1],[5,8,1],[5,9,1],[5,14,1],[6,8,1],[6,9,1],[6,13,1]]},"H2PtCl6":{"k":"ion","n":"[PtCl₆]²⁻ 팔면체 + 양성자(단순화)","a":[["Pt",0.0,0.0,0.0],["Cl",2.32,0.0,0.0],["Cl",-2.32,0.0,0.0],["Cl",0.0,2.32,0.0],["Cl",0.0,-2.32,0.0],["Cl",0.0,0.0,2.32],["Cl",0.0,0.0,-2.32],["H",3.62,0.0,0.0],["H",-3.62,0.0,0.0]],"b":[[0,1,1],[0,2,1],[0,3,1],[0,4,1],[0,5,1],[0,6,1],[1,7,1],[2,8,1]]},"OsO4":{"k":"mol","n":"","a":[["O",0.61,-1.08,1.19],["Os",-0.13,0.03,-0.18],["O",-0.85,1.45,0.63],["O",-1.35,-1.0,-0.84],["O",1.72,0.6,-0.79]],"b":[[0,1,2],[1,2,2],[1,3,2],[1,4,2]]},"ZrO2":{"k":"crystal","n":"형석형 결정","a":[["Zr",-2.54,-2.53,-2.54],["Zr",0.0,0.0,-2.54],["Zr",0.0,-2.53,-0.0],["Zr",-2.54,0.0,-0.0],["O",-1.27,-1.27,-1.27],["O",-1.27,-1.27,1.27],["O",-1.27,1.27,-1.27],["O",-1.27,1.27,1.27],["O",1.27,-1.27,-1.27],["O",1.27,-1.27,1.27],["O",1.27,1.27,-1.27],["O",1.27,1.27,1.27],["Zr",-2.54,-2.53,2.53],["Zr",0.0,0.0,2.53],["Zr",-2.54,2.54,-2.54],["Zr",0.0,2.54,-0.0],["Zr",-2.54,2.54,2.53],["Zr",2.54,-2.53,-2.54],["Zr",2.54,0.0,-0.0],["Zr",2.54,-2.53,2.53],["Zr",2.54,2.54,-2.54],["Zr",2.54,2.54,2.53]],"b":[[0,4,1],[1,4,1],[1,6,1],[1,8,1],[1,10,1],[2,4,1],[2,5,1],[2,8,1],[2,9,1],[3,4,1],[3,5,1],[3,6,1],[3,7,1],[5,12,1],[5,13,1],[6,14,1],[6,15,1],[7,13,1],[7,15,1],[7,16,1],[8,17,1],[8,18,1],[9,13,1],[9,18,1],[9,19,1],[10,15,1],[10,18,1],[10,20,1],[11,13,1],[11,15,1],[11,18,1],[11,21,1]]},"ZrSiO4":{"k":"ion","n":"","a":[["O",1.68,-0.18,0.29],["Si",0.0,0.0,-0.0],["O",-0.34,1.63,-0.41],["O",-0.87,-0.43,1.41],["O",-0.47,-1.03,-1.29],["Zr",4.72,0.0,0.4]],"b":[[0,1,1],[1,2,1],[1,3,1],[1,4,1]]},"V2O5":{"k":"unit","n":"","a":[["V",-1.66,0.0,0.0],["V",1.66,0.0,0.0],["O",0.0,0.66,0.0],["O",-1.59,-1.62,0.0],["O",-2.44,0.51,-1.32],["O",2.72,1.22,0.0],["O",1.88,-0.91,-1.32]],"b":[[0,2,1],[1,2,1],[0,3,2],[0,4,2],[1,5,2],[1,6,2]]},"NiO":{"k":"crystal","n":"암염형(NaCl형) 결정","a":[["Ni",-2.09,-2.09,-2.09],["Ni",0.0,0.0,-2.09],["Ni",0.0,-2.09,0.0],["Ni",-2.09,0.0,0.0],["O",0.0,-2.09,-2.09],["O",-2.09,0.0,-2.09],["O",-2.09,-2.09,0.0],["O",0.0,0.0,0.0],["Ni",-2.09,-2.09,2.09],["Ni",0.0,0.0,2.09],["O",0.0,-2.09,2.09],["O",-2.09,0.0,2.09],["Ni",-2.09,2.09,-2.09],["Ni",0.0,2.09,0.0],["O",0.0,2.09,-2.09],["O",-2.09,2.09,0.0],["Ni",-2.09,2.09,2.09],["O",0.0,2.09,2.09],["Ni",2.09,-2.09,-2.09],["Ni",2.09,0.0,0.0],["O",2.09,0.0,-2.09],["O",2.09,-2.09,0.0],["Ni",2.09,-2.09,2.09],["O",2.09,0.0,2.09],["Ni",2.09,2.09,-2.09],["O",2.09,2.09,0.0],["Ni",2.09,2.09,2.09]],"b":[[0,4,1],[0,5,1],[0,6,1],[1,4,1],[1,5,1],[1,7,1],[1,14,1],[1,20,1],[2,4,1],[2,6,1],[2,7,1],[2,10,1],[2,21,1],[3,5,1],[3,6,1],[3,7,1],[3,11,1],[3,15,1],[4,18,1],[5,12,1],[6,8,1],[7,9,1],[7,13,1],[7,19,1],[8,10,1],[8,11,1],[9,10,1],[9,11,1],[9,17,1],[9,23,1],[10,22,1],[11,16,1],[12,14,1],[12,15,1],[13,14,1],[13,15,1],[13,17,1],[13,25,1],[14,24,1],[15,16,1],[16,17,1],[17,26,1],[18,20,1],[18,21,1],[19,20,1],[19,21,1],[19,23,1],[19,25,1],[20,24,1],[21,22,1],[22,23,1],[23,26,1],[24,25,1],[25,26,1]]},"CoCl2":{"k":"ion","n":"","a":[["Co",0.0,0.0,0.0],["Cl",3.4,0.0,0.4],["Cl",-3.4,0.0,-0.4]],"b":[]},"C2H5NO2":{"k":"mol","n":"","a":[["N",-0.63,0.0,-1.33],["C",-0.48,-0.62,-0.01],["C",0.74,-0.08,0.73],["O",1.43,-0.69,1.53],["O",0.98,1.23,0.48],["H",-1.58,-0.15,-1.67],["H",-0.52,1.01,-1.22],["H",-1.36,-0.41,0.61],["H",-0.37,-1.7,-0.13],["H",1.78,1.42,1.01]],"b":[[0,1,1],[1,2,1],[2,3,2],[2,4,1],[0,5,1],[0,6,1],[1,7,1],[1,8,1],[4,9,1]]},"C3H7NO2":{"k":"mol","n":"","a":[["C",-1.03,-0.94,-0.17],["C",-0.19,0.09,0.58],["N",-0.61,1.46,0.23],["C",1.29,-0.13,0.25],["O",2.05,-0.91,0.81],["O",1.72,0.58,-0.82],["H",-0.92,-0.83,-1.26],["H",-0.71,-1.96,0.09],["H",-2.09,-0.84,0.08],["H",-0.31,-0.03,1.66],["H",-1.62,1.51,0.15],["H",-0.24,1.67,-0.71],["H",2.67,0.34,-0.89]],"b":[[0,1,1],[1,2,1],[1,3,1],[3,4,2],[3,5,1],[0,6,1],[0,7,1],[0,8,1],[1,9,1],[2,10,1],[2,11,1],[5,12,1]]},"C8H10N4O2":{"k":"mol","n":"","a":[["C",3.18,-0.98,0.04],["N",2.16,0.03,0.06],["C",2.36,1.38,0.13],["N",1.22,2.04,0.13],["C",0.26,1.07,0.06],["C",0.81,-0.17,0.01],["C",0.03,-1.36,-0.06],["O",0.54,-2.48,-0.1],["N",-1.34,-1.11,-0.09],["C",-2.24,-2.24,-0.17],["C",-1.94,0.17,-0.05],["O",-3.17,0.29,-0.08],["N",-1.1,1.27,0.03],["C",-1.64,2.62,0.08],["H",3.1,-1.55,-0.89],["H",3.05,-1.63,0.91],["H",4.17,-0.5,0.09],["H",3.34,1.83,0.18],["H",-2.86,-2.15,-1.07],["H",-1.72,-3.2,-0.2],["H",-2.91,-2.23,0.7],["H",-1.31,3.1,1.01],["H",-2.73,2.62,0.05],["H",-1.26,3.18,-0.78]],"b":[[0,1,1],[1,2,1],[2,3,2],[3,4,1],[4,5,2],[5,6,1],[6,7,2],[6,8,1],[8,9,1],[8,10,1],[10,11,2],[10,12,1],[12,13,1],[5,1,1],[12,4,1],[0,14,1],[0,15,1],[0,16,1],[2,17,1],[9,18,1],[9,19,1],[9,20,1],[13,21,1],[13,22,1],[13,23,1]]},"C9H8O4":{"k":"mol","n":"","a":[["C",3.4,0.55,-0.04],["C",2.04,0.14,0.44],["O",1.69,0.14,1.61],["O",1.29,-0.27,-0.66],["C",-0.03,-0.58,-0.31],["C",-0.33,-1.94,-0.16],["C",-1.63,-2.33,0.15],["C",-2.63,-1.37,0.3],["C",-2.33,-0.01,0.13],["C",-1.02,0.4,-0.19],["C",-0.7,1.83,-0.4],["O",0.36,2.31,-0.75],["O",-1.76,2.64,-0.15],["H",3.92,-0.31,-0.47],["H",3.98,0.93,0.81],["H",3.31,1.36,-0.78],["H",0.45,-2.69,-0.28],["H",-1.87,-3.38,0.28],["H",-3.64,-1.67,0.55],["H",-3.12,0.72,0.25],["H",-1.4,3.54,-0.31]],"b":[[0,1,1],[1,2,2],[1,3,1],[3,4,1],[4,5,2],[5,6,1],[6,7,2],[7,8,1],[8,9,2],[9,10,1],[10,11,2],[10,12,1],[9,4,1],[0,13,1],[0,14,1],[0,15,1],[5,16,1],[6,17,1],[7,18,1],[8,19,1],[12,20,1]]},"C6H8O6":{"k":"mol","n":"","a":[["O",-3.2,0.85,-0.27],["C",-1.79,1.0,-0.41],["C",-1.1,0.12,0.65],["O",-1.68,0.47,1.92],["C",0.42,0.31,0.71],["O",0.97,-0.7,1.61],["C",1.87,-1.47,0.94],["O",2.5,-2.41,1.38],["C",2.0,-0.97,-0.43],["O",2.85,-1.46,-1.38],["C",1.17,0.06,-0.55],["O",1.02,0.85,-1.66],["H",-3.62,1.42,-0.94],["H",-1.55,2.06,-0.26],["H",-1.52,0.7,-1.43],["H",-1.36,-0.93,0.48],["H",-2.64,0.5,1.76],["H",0.68,1.28,1.14],["H",3.33,-2.19,-0.95],["H",1.65,0.51,-2.32]],"b":[[0,1,1],[1,2,1],[2,3,1],[2,4,1],[4,5,1],[5,6,1],[6,7,2],[6,8,1],[8,9,1],[8,10,2],[10,11,1],[10,4,1],[0,12,1],[1,13,1],[1,14,1],[2,15,1],[3,16,1],[4,17,1],[9,18,1],[11,19,1]]},"NaI":{"k":"crystal","n":"암염형(NaCl형) 결정","a":[["Na",-3.23,-3.23,-3.23],["Na",0.0,0.0,-3.23],["Na",0.0,-3.23,0.0],["Na",-3.23,0.0,0.0],["I",0.0,-3.23,-3.23],["I",-3.23,0.0,-3.23],["I",-3.23,-3.23,0.0],["I",0.0,0.0,0.0],["Na",-3.23,-3.23,3.23],["Na",0.0,0.0,3.23],["I",0.0,-3.23,3.23],["I",-3.23,0.0,3.23],["Na",-3.23,3.23,-3.23],["Na",0.0,3.23,0.0],["I",0.0,3.23,-3.23],["I",-3.23,3.23,0.0],["Na",-3.23,3.23,3.23],["I",0.0,3.23,3.23],["Na",3.23,-3.23,-3.23],["Na",3.23,0.0,0.0],["I",3.23,0.0,-3.23],["I",3.23,-3.23,0.0],["Na",3.23,-3.23,3.23],["I",3.23,0.0,3.23],["Na",3.23,3.23,-3.23],["I",3.23,3.23,0.0],["Na",3.23,3.23,3.23]],"b":[[0,4,1],[0,5,1],[0,6,1],[1,4,1],[1,5,1],[1,7,1],[1,14,1],[1,20,1],[2,4,1],[2,6,1],[2,7,1],[2,10,1],[2,21,1],[3,5,1],[3,6,1],[3,7,1],[3,11,1],[3,15,1],[4,18,1],[5,12,1],[6,8,1],[7,9,1],[7,13,1],[7,19,1],[8,10,1],[8,11,1],[9,10,1],[9,11,1],[9,17,1],[9,23,1],[10,22,1],[11,16,1],[12,14,1],[12,15,1],[13,14,1],[13,15,1],[13,17,1],[13,25,1],[14,24,1],[15,16,1],[16,17,1],[17,26,1],[18,20,1],[18,21,1],[19,20,1],[19,21,1],[19,23,1],[19,25,1],[20,24,1],[21,22,1],[22,23,1],[23,26,1],[24,25,1],[25,26,1]]},"KI":{"k":"crystal","n":"암염형(NaCl형) 결정","a":[["K",-3.53,-3.53,-3.53],["K",0.0,0.0,-3.53],["K",0.0,-3.53,0.0],["K",-3.53,0.0,0.0],["I",0.0,-3.53,-3.53],["I",-3.53,0.0,-3.53],["I",-3.53,-3.53,0.0],["I",0.0,0.0,0.0],["K",-3.53,-3.53,3.54],["K",0.0,0.0,3.54],["I",0.0,-3.53,3.54],["I",-3.53,0.0,3.54],["K",-3.53,3.54,-3.53],["K",0.0,3.54,0.0],["I",0.0,3.54,-3.53],["I",-3.53,3.54,0.0],["K",-3.53,3.54,3.54],["I",0.0,3.54,3.54],["K",3.54,-3.53,-3.53],["K",3.54,0.0,0.0],["I",3.54,0.0,-3.53],["I",3.54,-3.53,0.0],["K",3.54,-3.53,3.54],["I",3.54,0.0,3.54],["K",3.54,3.54,-3.53],["I",3.54,3.54,0.0],["K",3.54,3.54,3.54]],"b":[[0,4,1],[0,5,1],[0,6,1],[1,4,1],[1,5,1],[1,7,1],[1,14,1],[1,20,1],[2,4,1],[2,6,1],[2,7,1],[2,10,1],[2,21,1],[3,5,1],[3,6,1],[3,7,1],[3,11,1],[3,15,1],[4,18,1],[5,12,1],[6,8,1],[7,9,1],[7,13,1],[7,19,1],[8,10,1],[8,11,1],[9,10,1],[9,11,1],[9,17,1],[9,23,1],[10,22,1],[11,16,1],[12,14,1],[12,15,1],[13,14,1],[13,15,1],[13,17,1],[13,25,1],[14,24,1],[15,16,1],[16,17,1],[17,26,1],[18,20,1],[18,21,1],[19,20,1],[19,21,1],[19,23,1],[19,25,1],[20,24,1],[21,22,1],[22,23,1],[23,26,1],[24,25,1],[25,26,1]]},"KBr":{"k":"crystal","n":"암염형(NaCl형) 결정","a":[["K",-3.3,-3.3,-3.3],["K",0.0,0.0,-3.3],["K",0.0,-3.3,0.0],["K",-3.3,0.0,0.0],["Br",0.0,-3.3,-3.3],["Br",-3.3,0.0,-3.3],["Br",-3.3,-3.3,0.0],["Br",0.0,0.0,0.0],["K",-3.3,-3.3,3.3],["K",0.0,0.0,3.3],["Br",0.0,-3.3,3.3],["Br",-3.3,0.0,3.3],["K",-3.3,3.3,-3.3],["K",0.0,3.3,0.0],["Br",0.0,3.3,-3.3],["Br",-3.3,3.3,0.0],["K",-3.3,3.3,3.3],["Br",0.0,3.3,3.3],["K",3.3,-3.3,-3.3],["K",3.3,0.0,0.0],["Br",3.3,0.0,-3.3],["Br",3.3,-3.3,0.0],["K",3.3,-3.3,3.3],["Br",3.3,0.0,3.3],["K",3.3,3.3,-3.3],["Br",3.3,3.3,0.0],["K",3.3,3.3,3.3]],"b":[[0,4,1],[0,5,1],[0,6,1],[1,4,1],[1,5,1],[1,7,1],[1,14,1],[1,20,1],[2,4,1],[2,6,1],[2,7,1],[2,10,1],[2,21,1],[3,5,1],[3,6,1],[3,7,1],[3,11,1],[3,15,1],[4,18,1],[5,12,1],[6,8,1],[7,9,1],[7,13,1],[7,19,1],[8,10,1],[8,11,1],[9,10,1],[9,11,1],[9,17,1],[9,23,1],[10,22,1],[11,16,1],[12,14,1],[12,15,1],[13,14,1],[13,15,1],[13,17,1],[13,25,1],[14,24,1],[15,16,1],[16,17,1],[17,26,1],[18,20,1],[18,21,1],[19,20,1],[19,21,1],[19,23,1],[19,25,1],[20,24,1],[21,22,1],[22,23,1],[23,26,1],[24,25,1],[25,26,1]]},"LiH":{"k":"crystal","n":"암염형(NaCl형) 결정","a":[["Li",-2.04,-2.04,-2.04],["Li",0.0,0.0,-2.04],["Li",0.0,-2.04,0.0],["Li",-2.04,0.0,0.0],["H",0.0,-2.04,-2.04],["H",-2.04,0.0,-2.04],["H",-2.04,-2.04,0.0],["H",0.0,0.0,0.0],["Li",-2.04,-2.04,2.04],["Li",0.0,0.0,2.04],["H",0.0,-2.04,2.04],["H",-2.04,0.0,2.04],["Li",-2.04,2.04,-2.04],["Li",0.0,2.04,0.0],["H",0.0,2.04,-2.04],["H",-2.04,2.04,0.0],["Li",-2.04,2.04,2.04],["H",0.0,2.04,2.04],["Li",2.04,-2.04,-2.04],["Li",2.04,0.0,0.0],["H",2.04,0.0,-2.04],["H",2.04,-2.04,0.0],["Li",2.04,-2.04,2.04],["H",2.04,0.0,2.04],["Li",2.04,2.04,-2.04],["H",2.04,2.04,0.0],["Li",2.04,2.04,2.04]],"b":[[0,4,1],[0,5,1],[0,6,1],[1,4,1],[1,5,1],[1,7,1],[1,14,1],[1,20,1],[2,4,1],[2,6,1],[2,7,1],[2,10,1],[2,21,1],[3,5,1],[3,6,1],[3,7,1],[3,11,1],[3,15,1],[4,18,1],[5,12,1],[6,8,1],[7,9,1],[7,13,1],[7,19,1],[8,10,1],[8,11,1],[9,10,1],[9,11,1],[9,17,1],[9,23,1],[10,22,1],[11,16,1],[12,14,1],[12,15,1],[13,14,1],[13,15,1],[13,17,1],[13,25,1],[14,24,1],[15,16,1],[16,17,1],[17,26,1],[18,20,1],[18,21,1],[19,20,1],[19,21,1],[19,23,1],[19,25,1],[20,24,1],[21,22,1],[22,23,1],[23,26,1],[24,25,1],[25,26,1]]},"BeO":{"k":"unit","n":"","a":[["Be",0.66,0.0,0.0],["O",-0.66,0.0,0.0]],"b":[[0,1,2]]},"KAl(SO4)2":{"k":"ion","n":"","a":[["O",-1.17,-0.9,-0.09],["S",-0.0,0.0,0.0],["O",-0.11,1.05,-1.02],["O",0.04,0.62,1.34],["O",1.23,-0.78,-0.22],["O",3.31,-0.9,0.31],["S",4.47,0.0,0.4],["O",4.37,1.05,-0.62],["O",4.51,0.62,1.74],["O",5.71,-0.78,0.18],["K",-2.24,3.87,-0.4],["Al",-2.24,-3.87,0.4]],"b":[[0,1,1],[1,2,2],[1,3,2],[1,4,1],[5,6,1],[6,7,2],[6,8,2],[6,9,1]]},"Al2Si2O5(OH)4":{"k":"unit","n":"","a":[["O",-5.67,-0.09,1.83],["Al",-3.9,-0.11,1.37],["O",-3.1,1.4,0.71],["O",-2.91,-1.68,1.55],["Si",-1.24,-1.72,1.11],["O",-0.42,-3.06,1.28],["O",-0.46,-0.3,0.47],["Si",1.21,-0.31,0.0],["O",2.07,-1.63,0.16],["O",1.94,1.13,-0.63],["Al",3.72,1.17,-1.14],["O",4.45,2.71,-1.82],["O",4.76,-0.34,-0.97],["H",-6.15,-0.34,1.0],["H",-3.23,1.34,-0.27],["H",4.3,2.64,-2.79],["H",4.64,-0.81,-1.84]],"b":[[0,1,1],[1,2,1],[1,3,1],[3,4,1],[4,5,2],[4,6,1],[6,7,1],[7,8,2],[7,9,1],[9,10,1],[10,11,1],[10,12,1],[0,13,1],[2,14,1],[11,15,1],[12,16,1]]},"Mg3Si4O10(OH)2":{"k":"unit","n":"","a":[["O",-3.55,-0.05,1.15],["Mg",-3.09,-1.74,0.16],["O",-2.63,-3.43,-0.84],["Si",-1.67,-3.4,-2.29],["O",-1.61,-4.68,-3.2],["O",-0.91,-1.93,-2.84],["Si",-0.55,-0.62,-1.75],["O",-0.58,-0.85,-0.19],["O",0.04,0.88,-2.39],["Mg",0.58,2.36,-1.12],["O",1.12,3.83,0.16],["Si",1.74,3.48,1.74],["O",1.82,4.63,2.81],["O",2.11,1.85,2.22],["Si",2.46,0.61,1.05],["O",2.8,0.99,-0.44],["O",2.64,-1.04,1.57],["Mg",2.31,-1.52,3.51],["H",-3.03,0.65,0.68]],"b":[[0,1,1],[1,2,1],[2,3,1],[3,4,2],[3,5,1],[5,6,1],[6,7,2],[6,8,1],[8,9,1],[9,10,1],[10,11,1],[11,12,2],[11,13,1],[13,14,1],[14,15,2],[14,16,1],[16,17,1],[0,18,1]]},"Be3Al2Si6O18":{"k":"unit","n":"","a":[["O",0.15,4.41,0.66],["Si",0.62,2.92,0.49],["O",2.31,2.53,0.61],["Si",2.86,0.89,0.43],["O",4.4,0.57,0.54],["O",1.72,-0.38,0.12],["Si",2.24,-2.03,-0.06],["O",3.77,-2.4,0.04],["O",1.08,-3.29,-0.37],["Si",-0.62,-2.92,-0.49],["O",-1.64,-4.08,-0.76],["O",-1.17,-1.29,-0.31],["Si",-2.86,-0.89,-0.43],["O",-3.92,-2.02,-0.7],["O",-3.39,0.76,-0.24],["Si",-2.25,2.03,0.06],["O",-2.75,3.51,0.22],["O",-0.55,1.67,0.19],["Be",7.47,0.0,0.4],["Be",2.31,7.1,-0.4],["Be",-6.04,4.39,0.4],["Al",-6.04,-4.39,-0.4],["Al",2.31,-7.1,0.4]],"b":[[0,1,2],[1,2,1],[2,3,1],[3,4,2],[3,5,1],[5,6,1],[6,7,2],[6,8,1],[8,9,1],[9,10,2],[9,11,1],[11,12,1],[12,13,2],[12,14,1],[14,15,1],[15,16,2],[15,17,1],[17,1,1]]},"CaTiO3":{"k":"crystal","n":"페로브스카이트 결정","a":[["Ti",-0.0,0.0,0.0],["O",-1.92,0.0,0.0],["O",-0.0,-1.92,0.0],["O",-0.0,0.0,-1.92],["Ca",-1.92,-1.92,-1.92],["O",-0.0,0.0,1.92],["Ca",-1.92,-1.92,1.92],["O",-0.0,1.92,0.0],["Ca",-1.92,1.92,-1.92],["Ca",-1.92,1.92,1.92],["O",1.92,0.0,0.0],["Ca",1.92,-1.92,-1.92],["Ca",1.92,-1.92,1.92],["Ca",1.92,1.92,-1.92],["Ca",1.92,1.92,1.92]],"b":[[0,1,1],[0,2,1],[0,3,1],[0,5,1],[0,7,1],[0,10,1]]},"CH6NPbI3":{"k":"crystal","n":"페로브스카이트 결정 · 가운데 N 자리는 메틸암모늄(CH₃NH₃⁺) 이온을 단순화해 표시","a":[["Pb",0.0,0.0,0.0],["I",-3.15,0.0,0.0],["I",0.0,-3.15,0.0],["I",0.0,0.0,-3.15],["N",-3.15,-3.15,-3.15],["I",0.0,0.0,3.15],["N",-3.15,-3.15,3.15],["I",0.0,3.15,0.0],["N",-3.15,3.15,-3.15],["N",-3.15,3.15,3.15],["I",3.15,0.0,0.0],["N",3.15,-3.15,-3.15],["N",3.15,-3.15,3.15],["N",3.15,3.15,-3.15],["N",3.15,3.15,3.15]],"b":[[0,1,1],[0,2,1],[0,3,1],[0,5,1],[0,7,1],[0,10,1]]},"FeTiO3":{"k":"ion","n":"","a":[["O",-1.39,-1.71,-0.04],["Ti",0.07,0.07,0.14],["O",2.47,-0.13,-0.05],["O",-1.15,1.78,-0.05],["Fe",5.47,0.0,0.4]],"b":[[0,1,1],[1,2,1],[1,3,2]]},"NaN3":{"k":"ion","n":"","a":[["N",-1.46,0.09,0.0],["N",0.0,0.0,0.0],["N",1.46,-0.09,0.0],["Na",4.46,0.0,0.4]],"b":[[0,1,2],[1,2,2]]},"SrCO3":{"k":"ion","n":"","a":[["O",-0.67,-1.2,-0.0],["C",0.03,-0.0,0.0],["O",-0.65,1.21,-0.0],["O",1.29,-0.01,0.0],["Sr",4.37,0.0,0.4]],"b":[[0,1,1],[1,2,1],[1,3,2]]},"BaCl2":{"k":"ion","n":"","a":[["Ba",0.0,0.0,0.0],["Cl",3.4,0.0,0.4],["Cl",-3.4,0.0,-0.4]],"b":[]},"CsCl":{"k":"crystal","n":"염화세슘형 결정","a":[["Cs",-2.06,-2.06,-2.06],["Cl",-0.0,-0.0,-0.0],["Cs",-2.06,-2.06,2.06],["Cs",-2.06,2.06,-2.06],["Cs",-2.06,2.06,2.06],["Cs",2.06,-2.06,-2.06],["Cs",2.06,-2.06,2.06],["Cs",2.06,2.06,-2.06],["Cs",2.06,2.06,2.06]],"b":[[0,1,1],[1,2,1],[1,3,1],[1,4,1],[1,5,1],[1,6,1],[1,7,1],[1,8,1]]},"RbCl":{"k":"crystal","n":"암염형(NaCl형) 결정","a":[["Rb",-3.29,-3.29,-3.29],["Rb",0.0,0.0,-3.29],["Rb",0.0,-3.29,0.0],["Rb",-3.29,0.0,0.0],["Cl",0.0,-3.29,-3.29],["Cl",-3.29,0.0,-3.29],["Cl",-3.29,-3.29,0.0],["Cl",0.0,0.0,0.0],["Rb",-3.29,-3.29,3.29],["Rb",0.0,0.0,3.29],["Cl",0.0,-3.29,3.29],["Cl",-3.29,0.0,3.29],["Rb",-3.29,3.29,-3.29],["Rb",0.0,3.29,0.0],["Cl",0.0,3.29,-3.29],["Cl",-3.29,3.29,0.0],["Rb",-3.29,3.29,3.29],["Cl",0.0,3.29,3.29],["Rb",3.29,-3.29,-3.29],["Rb",3.29,0.0,0.0],["Cl",3.29,0.0,-3.29],["Cl",3.29,-3.29,0.0],["Rb",3.29,-3.29,3.29],["Cl",3.29,0.0,3.29],["Rb",3.29,3.29,-3.29],["Cl",3.29,3.29,0.0],["Rb",3.29,3.29,3.29]],"b":[[0,4,1],[0,5,1],[0,6,1],[1,4,1],[1,5,1],[1,7,1],[1,14,1],[1,20,1],[2,4,1],[2,6,1],[2,7,1],[2,10,1],[2,21,1],[3,5,1],[3,6,1],[3,7,1],[3,11,1],[3,15,1],[4,18,1],[5,12,1],[6,8,1],[7,9,1],[7,13,1],[7,19,1],[8,10,1],[8,11,1],[9,10,1],[9,11,1],[9,17,1],[9,23,1],[10,22,1],[11,16,1],[12,14,1],[12,15,1],[13,14,1],[13,15,1],[13,17,1],[13,25,1],[14,24,1],[15,16,1],[16,17,1],[17,26,1],[18,20,1],[18,21,1],[19,20,1],[19,21,1],[19,23,1],[19,25,1],[20,24,1],[21,22,1],[22,23,1],[23,26,1],[24,25,1],[25,26,1]]},"In2O3":{"k":"unit","n":"","a":[["O",0.0,0.9,0.0],["In",-1.75,0.0,0.0],["In",1.75,0.0,0.0],["O",-2.9,-1.4,0.0],["O",2.9,-1.4,0.0]],"b":[[0,1,1],[0,2,1],[1,3,2],[2,4,2]]},"GeO2":{"k":"crystal","n":"루틸형 결정","a":[["Ge",-2.2,-2.2,-1.43],["Ge",0.0,0.0,0.0],["O",-0.86,-0.86,-1.43],["O",0.86,0.86,-1.43],["O",1.34,-1.34,0.0],["O",-1.34,1.34,0.0],["Ge",-2.2,-2.2,1.43],["O",-0.86,-0.86,1.43],["O",0.86,0.86,1.43],["Ge",-2.2,2.2,-1.43],["Ge",-2.2,2.2,1.43],["Ge",2.2,-2.2,-1.43],["Ge",2.2,-2.2,1.43],["Ge",2.2,2.2,-1.43],["Ge",2.2,2.2,1.43]],"b":[[0,2,1],[1,2,1],[1,3,1],[1,4,1],[1,5,1],[1,7,1],[1,8,1],[3,13,1],[4,11,1],[4,12,1],[5,9,1],[5,10,1],[6,7,1],[8,14,1]]},"SeO2":{"k":"mol","n":"","a":[["O",-1.54,-0.08,0.0],["Se",-0.02,0.0,0.0],["O",1.57,0.08,0.0]],"b":[[0,1,2],[1,2,2]]},"Sb2S3":{"k":"unit","n":"","a":[["S",-2.09,-1.52,-0.91],["Sb",-1.87,0.16,0.22],["S",-0.13,1.79,-0.33],["Sb",1.54,0.55,0.95],["S",2.55,-0.99,0.08]],"b":[[0,1,2],[1,2,1],[2,3,1],[3,4,2]]},"TlCl":{"k":"crystal","n":"염화세슘형 결정","a":[["Tl",-1.92,-1.92,-1.92],["Cl",-0.0,-0.0,-0.0],["Tl",-1.92,-1.92,1.92],["Tl",-1.92,1.92,-1.92],["Tl",-1.92,1.92,1.92],["Tl",1.92,-1.92,-1.92],["Tl",1.92,-1.92,1.92],["Tl",1.92,1.92,-1.92],["Tl",1.92,1.92,1.92]],"b":[[0,1,1],[1,2,1],[1,3,1],[1,4,1],[1,5,1],[1,6,1],[1,7,1],[1,8,1]]},"PbO":{"k":"unit","n":"","a":[["Pb",0.87,0.0,0.0],["O",-0.87,0.0,0.0]],"b":[[0,1,2]]},"HgO":{"k":"unit","n":"","a":[["Hg",0.89,0.0,0.0],["O",-0.89,0.0,0.0]],"b":[[0,1,2]]},"ScF3":{"k":"unit","n":"","a":[["F",-1.1,1.93,-0.04],["Sc",0.1,-0.04,0.14],["F",2.51,-0.17,-0.05],["F",-1.5,-1.72,-0.04]],"b":[[0,1,1],[1,2,1],[1,3,1]]},"Y2O3":{"k":"unit","n":"","a":[["O",0.0,0.9,0.0],["Y",-1.75,0.0,0.0],["Y",1.75,0.0,0.0],["O",-2.9,-1.4,0.0],["O",2.9,-1.4,0.0]],"b":[[0,1,1],[0,2,1],[1,3,2],[2,4,2]]},"CeO2":{"k":"crystal","n":"형석형 결정","a":[["Ce",-2.7,-2.7,-2.7],["Ce",0.0,0.0,-2.7],["Ce",0.0,-2.7,0.0],["Ce",-2.7,0.0,0.0],["O",-1.35,-1.35,-1.35],["O",-1.35,-1.35,1.35],["O",-1.35,1.35,-1.35],["O",-1.35,1.35,1.35],["O",1.35,-1.35,-1.35],["O",1.35,-1.35,1.35],["O",1.35,1.35,-1.35],["O",1.35,1.35,1.35],["Ce",-2.7,-2.7,2.71],["Ce",0.0,0.0,2.71],["Ce",-2.7,2.71,-2.7],["Ce",0.0,2.71,0.0],["Ce",-2.7,2.71,2.71],["Ce",2.71,-2.7,-2.7],["Ce",2.71,0.0,0.0],["Ce",2.71,-2.7,2.71],["Ce",2.71,2.71,-2.7],["Ce",2.71,2.71,2.71]],"b":[[0,4,1],[1,4,1],[1,6,1],[1,8,1],[1,10,1],[2,4,1],[2,5,1],[2,8,1],[2,9,1],[3,4,1],[3,5,1],[3,6,1],[3,7,1],[5,12,1],[5,13,1],[6,14,1],[6,15,1],[7,13,1],[7,15,1],[7,16,1],[8,17,1],[8,18,1],[9,13,1],[9,18,1],[9,19,1],[10,15,1],[10,18,1],[10,20,1],[11,13,1],[11,15,1],[11,18,1],[11,21,1]]},"Eu2O3":{"k":"unit","n":"","a":[["O",0.0,0.9,0.0],["Eu",-1.75,0.0,0.0],["Eu",1.75,0.0,0.0],["O",-2.9,-1.4,0.0],["O",2.9,-1.4,0.0]],"b":[[0,1,1],[0,2,1],[1,3,2],[2,4,2]]},"Gd2O3":{"k":"unit","n":"","a":[["O",0.0,0.9,0.0],["Gd",-1.75,0.0,0.0],["Gd",1.75,0.0,0.0],["O",-2.9,-1.4,0.0],["O",2.9,-1.4,0.0]],"b":[[0,1,1],[0,2,1],[1,3,2],[2,4,2]]},"ThO2":{"k":"crystal","n":"형석형 결정","a":[["Th",-2.8,-2.8,-2.8],["Th",-0.0,0.0,-2.8],["Th",-0.0,-2.8,0.0],["Th",-2.8,0.0,0.0],["O",-1.4,-1.4,-1.4],["O",-1.4,-1.4,1.4],["O",-1.4,1.4,-1.4],["O",-1.4,1.4,1.4],["O",1.4,-1.4,-1.4],["O",1.4,-1.4,1.4],["O",1.4,1.4,-1.4],["O",1.4,1.4,1.4],["Th",-2.8,-2.8,2.8],["Th",-0.0,0.0,2.8],["Th",-2.8,2.8,-2.8],["Th",-0.0,2.8,0.0],["Th",-2.8,2.8,2.8],["Th",2.8,-2.8,-2.8],["Th",2.8,0.0,0.0],["Th",2.8,-2.8,2.8],["Th",2.8,2.8,-2.8],["Th",2.8,2.8,2.8]],"b":[[0,4,1],[1,4,1],[1,6,1],[1,8,1],[1,10,1],[2,4,1],[2,5,1],[2,8,1],[2,9,1],[3,4,1],[3,5,1],[3,6,1],[3,7,1],[5,12,1],[5,13,1],[6,14,1],[6,15,1],[7,13,1],[7,15,1],[7,16,1],[8,17,1],[8,18,1],[9,13,1],[9,18,1],[9,19,1],[10,15,1],[10,18,1],[10,20,1],[11,13,1],[11,15,1],[11,18,1],[11,21,1]]},"PuO2":{"k":"crystal","n":"형석형 결정","a":[["Pu",-2.7,-2.7,-2.7],["Pu",0.0,0.0,-2.7],["Pu",0.0,-2.7,0.0],["Pu",-2.7,0.0,0.0],["O",-1.35,-1.35,-1.35],["O",-1.35,-1.35,1.35],["O",-1.35,1.35,-1.35],["O",-1.35,1.35,1.35],["O",1.35,-1.35,-1.35],["O",1.35,-1.35,1.35],["O",1.35,1.35,-1.35],["O",1.35,1.35,1.35],["Pu",-2.7,-2.7,2.7],["Pu",0.0,0.0,2.7],["Pu",-2.7,2.7,-2.7],["Pu",0.0,2.7,0.0],["Pu",-2.7,2.7,2.7],["Pu",2.7,-2.7,-2.7],["Pu",2.7,0.0,0.0],["Pu",2.7,-2.7,2.7],["Pu",2.7,2.7,-2.7],["Pu",2.7,2.7,2.7]],"b":[[0,4,1],[1,4,1],[1,6,1],[1,8,1],[1,10,1],[2,4,1],[2,5,1],[2,8,1],[2,9,1],[3,4,1],[3,5,1],[3,6,1],[3,7,1],[5,12,1],[5,13,1],[6,14,1],[6,15,1],[7,13,1],[7,15,1],[7,16,1],[8,17,1],[8,18,1],[9,13,1],[9,18,1],[9,19,1],[10,15,1],[10,18,1],[10,20,1],[11,13,1],[11,15,1],[11,18,1],[11,21,1]]},"TaC":{"k":"crystal","n":"암염형(NaCl형) 결정","a":[["Ta",-2.23,-2.23,-2.23],["Ta",-0.0,0.0,-2.23],["Ta",-0.0,-2.23,0.0],["Ta",-2.23,0.0,0.0],["C",-0.0,-2.23,-2.23],["C",-2.23,0.0,-2.23],["C",-2.23,-2.23,0.0],["C",-0.0,0.0,0.0],["Ta",-2.23,-2.23,2.23],["Ta",-0.0,0.0,2.23],["C",-0.0,-2.23,2.23],["C",-2.23,0.0,2.23],["Ta",-2.23,2.23,-2.23],["Ta",-0.0,2.23,0.0],["C",-0.0,2.23,-2.23],["C",-2.23,2.23,0.0],["Ta",-2.23,2.23,2.23],["C",-0.0,2.23,2.23],["Ta",2.23,-2.23,-2.23],["Ta",2.23,0.0,0.0],["C",2.23,0.0,-2.23],["C",2.23,-2.23,0.0],["Ta",2.23,-2.23,2.23],["C",2.23,0.0,2.23],["Ta",2.23,2.23,-2.23],["C",2.23,2.23,0.0],["Ta",2.23,2.23,2.23]],"b":[[0,4,1],[0,5,1],[0,6,1],[1,4,1],[1,5,1],[1,7,1],[1,14,1],[1,20,1],[2,4,1],[2,6,1],[2,7,1],[2,10,1],[2,21,1],[3,5,1],[3,6,1],[3,7,1],[3,11,1],[3,15,1],[4,18,1],[5,12,1],[6,8,1],[7,9,1],[7,13,1],[7,19,1],[8,10,1],[8,11,1],[9,10,1],[9,11,1],[9,17,1],[9,23,1],[10,22,1],[11,16,1],[12,14,1],[12,15,1],[13,14,1],[13,15,1],[13,17,1],[13,25,1],[14,24,1],[15,16,1],[16,17,1],[17,26,1],[18,20,1],[18,21,1],[19,20,1],[19,21,1],[19,23,1],[19,25,1],[20,24,1],[21,22,1],[22,23,1],[23,26,1],[24,25,1],[25,26,1]]},"Nb3Sn":{"k":"crystal","n":"A15형 결정","a":[["Sn",-2.65,-2.65,-2.64],["Sn",0.0,0.0,0.0],["Nb",-1.32,-2.65,0.0],["Nb",1.32,-2.65,0.0],["Nb",0.0,-1.32,-2.64],["Nb",0.0,1.32,-2.64],["Nb",-2.65,0.0,-1.32],["Nb",-2.65,0.0,1.32],["Sn",-2.65,-2.65,2.65],["Nb",0.0,-1.32,2.65],["Nb",0.0,1.32,2.65],["Sn",-2.65,2.65,-2.64],["Nb",-1.32,2.65,0.0],["Nb",1.32,2.65,0.0],["Sn",-2.65,2.65,2.65],["Sn",2.65,-2.65,-2.64],["Nb",2.65,0.0,-1.32],["Nb",2.65,0.0,1.32],["Sn",2.65,-2.65,2.65],["Sn",2.65,2.65,-2.64],["Sn",2.65,2.65,2.65]],"b":[[0,2,1],[0,4,1],[0,6,1],[1,2,1],[1,3,1],[1,4,1],[1,5,1],[1,6,1],[1,7,1],[1,9,1],[1,10,1],[1,12,1],[1,13,1],[1,16,1],[1,17,1],[2,8,1],[3,15,1],[3,18,1],[4,15,1],[5,11,1],[5,19,1],[6,11,1],[7,8,1],[7,14,1],[8,9,1],[9,18,1],[10,14,1],[10,20,1],[11,12,1],[12,14,1],[13,19,1],[13,20,1],[15,16,1],[16,19,1],[17,18,1],[17,20,1],[2,3,1],[4,5,1],[6,7,1],[9,10,1],[12,13,1],[16,17,1]]},"RuO2":{"k":"crystal","n":"루틸형 결정","a":[["Ru",-2.25,-2.25,-1.55],["Ru",-0.0,-0.0,0.0],["O",-0.88,-0.88,-1.55],["O",0.88,0.88,-1.55],["O",1.37,-1.37,0.0],["O",-1.37,1.37,0.0],["Ru",-2.25,-2.25,1.55],["O",-0.88,-0.88,1.55],["O",0.88,0.88,1.55],["Ru",-2.25,2.24,-1.55],["Ru",-2.25,2.24,1.55],["Ru",2.24,-2.25,-1.55],["Ru",2.24,-2.25,1.55],["Ru",2.24,2.24,-1.55],["Ru",2.24,2.24,1.55]],"b":[[0,2,1],[1,2,1],[1,3,1],[1,4,1],[1,5,1],[1,7,1],[1,8,1],[3,13,1],[4,11,1],[4,12,1],[5,9,1],[5,10,1],[6,7,1],[8,14,1]]},"PdCl2":{"k":"ion","n":"","a":[["Pd",0.0,0.0,0.0],["Cl",3.4,0.0,0.4],["Cl",-3.4,0.0,-0.4]],"b":[]},"IrO2":{"k":"crystal","n":"루틸형 결정","a":[["Ir",-2.25,-2.25,-1.57],["Ir",0.0,0.0,0.0],["O",-0.88,-0.88,-1.57],["O",0.88,0.88,-1.57],["O",1.37,-1.37,0.0],["O",-1.37,1.37,0.0],["Ir",-2.25,-2.25,1.58],["O",-0.88,-0.88,1.58],["O",0.88,0.88,1.58],["Ir",-2.25,2.25,-1.57],["Ir",-2.25,2.25,1.58],["Ir",2.25,-2.25,-1.57],["Ir",2.25,-2.25,1.58],["Ir",2.25,2.25,-1.57],["Ir",2.25,2.25,1.58]],"b":[[0,2,1],[1,2,1],[1,3,1],[1,4,1],[1,5,1],[1,7,1],[1,8,1],[3,13,1],[4,11,1],[4,12,1],[5,9,1],[5,10,1],[6,7,1],[8,14,1]]},"ReS2":{"k":"crystal","n":"층상 결정 한 층","a":[["Re",-3.2,-5.54,0.0],["S",-3.2,-3.7,1.6],["S",-3.2,-3.7,-1.6],["Re",-4.8,-2.77,0.0],["S",-4.8,-0.92,1.6],["S",-4.8,-0.92,-1.6],["Re",-6.4,0.0,0.0],["S",-6.4,1.85,1.6],["S",-6.4,1.85,-1.6],["Re",0.0,-5.54,0.0],["S",-0.0,-3.7,1.6],["S",-0.0,-3.7,-1.6],["Re",-1.6,-2.77,0.0],["S",-1.6,-0.92,1.6],["S",-1.6,-0.92,-1.6],["Re",-3.2,0.0,0.0],["S",-3.2,1.85,1.6],["S",-3.2,1.85,-1.6],["Re",-4.8,2.77,0.0],["S",-4.8,4.62,1.6],["S",-4.8,4.62,-1.6],["Re",3.2,-5.54,0.0],["S",3.2,-3.7,1.6],["S",3.2,-3.7,-1.6],["Re",1.6,-2.77,0.0],["S",1.6,-0.92,1.6],["S",1.6,-0.92,-1.6],["Re",0.0,0.0,0.0],["S",-0.0,1.85,1.6],["S",-0.0,1.85,-1.6],["Re",-1.6,2.77,0.0],["S",-1.6,4.62,1.6],["S",-1.6,4.62,-1.6],["Re",-3.2,5.54,0.0],["Re",4.8,-2.77,0.0],["S",4.8,-0.92,1.6],["S",4.8,-0.92,-1.6],["Re",3.2,0.0,0.0],["S",3.2,1.85,1.6],["S",3.2,1.85,-1.6],["Re",1.6,2.77,0.0],["S",1.6,4.62,1.6],["S",1.6,4.62,-1.6],["Re",0.0,5.54,0.0],["Re",6.4,0.0,0.0],["S",6.4,1.85,1.6],["S",6.4,1.85,-1.6],["Re",4.8,2.77,0.0],["S",4.8,4.62,1.6],["S",4.8,4.62,-1.6],["Re",3.2,5.54,0.0]],"b":[[0,1,1],[0,2,1],[1,3,1],[1,12,1],[2,3,1],[2,12,1],[3,4,1],[3,5,1],[4,6,1],[4,15,1],[5,6,1],[5,15,1],[6,7,1],[6,8,1],[7,18,1],[8,18,1],[9,10,1],[9,11,1],[10,12,1],[10,24,1],[11,12,1],[11,24,1],[12,13,1],[12,14,1],[13,15,1],[13,27,1],[14,15,1],[14,27,1],[15,16,1],[15,17,1],[16,18,1],[16,30,1],[17,18,1],[17,30,1],[18,19,1],[18,20,1],[19,33,1],[20,33,1],[21,22,1],[21,23,1],[22,24,1],[22,34,1],[23,24,1],[23,34,1],[24,25,1],[24,26,1],[25,27,1],[25,37,1],[26,27,1],[26,37,1],[27,28,1],[27,29,1],[28,30,1],[28,40,1],[29,30,1],[29,40,1],[30,31,1],[30,32,1],[31,33,1],[31,43,1],[32,33,1],[32,43,1],[34,35,1],[34,36,1],[35,37,1],[35,44,1],[36,37,1],[36,44,1],[37,38,1],[37,39,1],[38,40,1],[38,47,1],[39,40,1],[39,47,1],[40,41,1],[40,42,1],[41,43,1],[41,50,1],[42,43,1],[42,50,1],[44,45,1],[44,46,1],[45,47,1],[46,47,1],[47,48,1],[47,49,1],[48,50,1],[49,50,1]]},"HAuCl4":{"k":"ion","n":"평면 사각형 [AuCl₄]⁻ + 양성자","a":[["Au",0.0,0.0,0.0],["Cl",2.28,0.0,0.0],["Cl",-2.28,0.0,0.0],["Cl",0.0,2.28,0.0],["Cl",0.0,-2.28,0.0],["H",3.56,0.0,0.0]],"b":[[0,1,1],[0,2,1],[0,3,1],[0,4,1],[1,5,1]]}};
+const KIND_NAMES={mol:"분자",crystal:"결정 구조",ion:"이온 모형",unit:"구조 단위 모형",ai:"Claude 생성 모형"};
+const AI3D={};
+let viewer=null,vState={style:"ballstick",spin:true,labels:false,data:null};
+function box0(){const b=document.getElementById("viewer");return b.clientWidth<b.clientHeight?0.62:0.8}
+function toSDF(d){
+  const L=["","  chem3d","",`${String(d.a.length).padStart(3)}${String(d.b.length).padStart(3)}  0  0  0  0  0  0  0  0999 V2000`];
+  d.a.forEach(([e,x,y,z])=>L.push(`${x.toFixed(4).padStart(10)}${y.toFixed(4).padStart(10)}${z.toFixed(4).padStart(10)} ${e.padEnd(3)} 0  0  0  0  0  0  0  0  0  0  0  0`));
+  d.b.forEach(([i,j,o])=>L.push(`${String(i+1).padStart(3)}${String(j+1).padStart(3)}${String(Math.min(3,Math.max(1,o|0))).padStart(3)}  0`));
+  L.push("M  END","$$$$");return L.join("\n");
+}
+function elColor(e){try{const c=$3Dmol.elementColors.Jmol[e]??$3Dmol.elementColors.Jmol[e.toUpperCase()];if(c!=null)return"#"+c.toString(16).padStart(6,"0")}catch(_){}return"#ff69b4"}
+function applyStyle(){
+  if(!viewer)return;const cr=vState.data&&vState.data.k==="crystal";
+  const st={ballstick:{stick:{radius:cr?0.12:0.16,colorscheme:"Jmol"},sphere:{scale:cr?0.3:0.27,colorscheme:"Jmol"}},
+    sphere:{sphere:{scale:cr?0.75:1.0,colorscheme:"Jmol"}},stick:{stick:{radius:0.22,colorscheme:"Jmol"}},line:{line:{linewidth:2,colorscheme:"Jmol"}}}[vState.style];
+  viewer.setStyle({},st);viewer.removeAllLabels();
+  if(vState.labels)viewer.getModel().selectedAtoms({}).forEach(a=>viewer.addLabel(a.elem,{position:{x:a.x,y:a.y,z:a.z},fontSize:12,fontColor:"white",backgroundColor:"#000",backgroundOpacity:0.45,inFront:true,showBackground:true}));
+  viewer.render();
+}
+function draw3D(d){
+  vState.data=d;const box=$("viewer");
+  if(typeof $3Dmol==="undefined"){$("vMsg").textContent="3D 엔진을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.";return}
+  $("vMsg").style.display="none";
+  if(!viewer){viewer=$3Dmol.createViewer(box,{backgroundAlpha:0,antialias:true});}
+  viewer.clear();viewer.addModel(toSDF(d),"sdf");
+  viewer.setClickable({},true,(atom)=>{const e=BYSYM[atom.elem];toast(`${atom.elem} · ${e?e.ko:"원자"}`)});
+  applyStyle();viewer.zoomTo();viewer.zoom(box0());viewer.resize();viewer.render();
+  viewer.spin(vState.spin?"y":false);
+  const els=[...new Set(d.a.map(a=>a[0]))];
+  $("vLeg").innerHTML=els.map(e=>`<span><i style="background:${elColor(e)}"></i>${e} ${BYSYM[e]?BYSYM[e].ko:""} × ${d.a.filter(a=>a[0]===e).length}</span>`).join("");
+}
+function open3D(formula,name,aiData){
+  $("vFormula").innerHTML=fmt(esc(formula));$("vName").textContent=name||"";
+  const m=$("vMsg");m.style.display="flex";m.textContent="3D 모형을 준비하는 중...";
+  $("vModal").classList.add("on");$("vLeg").innerHTML="";
+  const d=MOL3D[formula]||aiData||AI3D[formula];
+  if(d){setKind(MOL3D[formula]?d.k:"ai",d.n);setTimeout(()=>draw3D(d),30);return}
+  setKind("ai","");
+  if(!hasAI){m.textContent="이 화합물의 3D 데이터가 아직 없어요.";if(viewer){viewer.clear();viewer.render()}return}
+  if(viewer){viewer.clear();viewer.render()}
+  m.innerHTML=`<span><span class="spinner" style="border-color:#8b98a7;border-top-color:transparent"></span>Claude가 ${esc(formula)}의 3D 좌표를 계산하는 중...</span>`;
+  build3DbyAI(formula,name).then(d=>{AI3D[formula]=d;setKind("ai",d.n);if($("vModal").classList.contains("on")&&$("vFormula").textContent===formula.replace(/(\d+)/g,"$1"))draw3D(d)})
+   .catch(e=>{m.textContent=e&&e.code==="rate_limited"?"요청이 많아요. 잠시 후 다시 시도해 주세요.":"3D 모형을 만들지 못했어요. 다시 시도해 주세요."});
+}
+function setKind(k,note){$("vKind").className="kind "+k;$("vKind").textContent=KIND_NAMES[k]||"";$("vNote").textContent=note||""}
+async function build3DbyAI(formula,name){
+  const prompt=`화합물 ${formula}${name?" ("+name+")":""}의 3D 분자 모형 좌표를 만들어 주세요.
+- 분자라면 실제 결합 길이(Å)와 결합각을 반영한 전체 원자(수소 포함) 좌표.
+- 이온 결정이나 그물 구조 고체라면 특징이 보이는 작은 결정 조각(최대 60원자).
+- 반드시 JSON 하나로만 답하세요: {"atoms":[["원소기호",x,y,z],...],"bonds":[[i,j,결합차수],...],"kind":"mol|crystal|ion|unit","note":"모형에 대한 한국어 한 줄 설명"}
+- bonds의 i,j는 atoms의 0부터 시작하는 번호, 결합차수는 1~3.`;
+  let r;try{r=await sample.json(prompt,{modelTier:"complex"})}
+  catch(e){if(e&&(e.code==="not_granted"||e.code==="rate_limited"))throw e;const t=await sample(prompt,{modelTier:"complex"});const m=t.text.match(/\{[\s\S]*\}/);r=JSON.parse(m?m[0]:t.text)}
+  const a=(r.atoms||[]).filter(x=>Array.isArray(x)&&x.length>=4).slice(0,80).map(x=>[String(x[0]),+x[1]||0,+x[2]||0,+x[3]||0]);
+  if(!a.length)throw new Error("empty");
+  const b=(r.bonds||[]).filter(x=>Array.isArray(x)&&x[0]>=0&&x[1]>=0&&x[0]<a.length&&x[1]<a.length&&x[0]!==x[1]).map(x=>[x[0]|0,x[1]|0,x[2]|0||1]);
+  return{a,b,k:"ai",n:String(r.note||"Claude가 생성한 근사 좌표")};
+}
+$("vClose").onclick=()=>{$("vModal").classList.remove("on");if(viewer)viewer.spin(false)};
+$("vModal").onclick=e=>{if(e.target.id==="vModal")$("vClose").onclick()};
+$("vStyles").querySelectorAll("[data-st]").forEach(b=>b.onclick=()=>{vState.style=b.dataset.st;$("vStyles").querySelectorAll("[data-st]").forEach(x=>x.classList.toggle("on",x===b));applyStyle()});
+$("vSpin").onclick=function(){vState.spin=!vState.spin;this.classList.toggle("on",vState.spin);if(viewer)viewer.spin(vState.spin?"y":false)};
+$("vLabels").onclick=function(){vState.labels=!vState.labels;this.classList.toggle("on",vState.labels);applyStyle()};
+$("vReset").onclick=()=>{if(viewer){viewer.zoomTo();viewer.zoom(box0());viewer.render()}};
+window.addEventListener("resize",()=>{if(viewer&&$("vModal").classList.contains("on"))viewer.resize()});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-3d]");if(!b)return;e.stopPropagation();open3D(b.dataset["3d"],b.dataset.name||"")});
+
+/* ---------------- 화합물 분해 검색 ---------------- */
+const MASS=[1.008,4.003,6.941,9.012,10.812,12.011,14.007,15.999,18.998,20.18,22.99,24.305,26.982,28.086,30.974,32.067,35.453,39.948,39.098,40.078,44.956,47.867,50.944,51.996,54.938,55.845,58.933,58.693,63.546,65.39,69.723,72.61,74.922,78.96,79.904,83.8,85.468,87.62,88.906,91.224,92.906,95.94,98.0,101.07,102.906,106.42,107.868,112.412,114.818,118.711,121.76,127.6,126.904,131.29,132.905,137.328,138.906,140.116,140.908,144.24,145.0,150.36,151.964,157.25,158.925,162.5,164.93,167.26,168.934,173.04,174.967,178.49,180.948,183.84,186.207,190.23,192.217,195.078,196.967,200.59,204.383,207.2,208.98,209.0,210.0,222.0,223.0,226.0,227.0,232.038,231.036,238.029,237.0,244.0,243.0,247.0,247.0,251.0,252.0,257.0,258.0,259.0,262.0,267.0,268.0,269.0,270.0,269.0,278.0,281.0,281.0,285.0,284.0,289.0,288.0,293.0,292.0,294.0];
+const ALIAS={"소금":"NaCl","식염":"NaCl","가성소다":"NaOH","생석회":"CaO","소석회":"Ca(OH)2","석회수":"Ca(OH)2","베이킹소다":"NaHCO3","소다":"NaHCO3","식초":"C2H4O2","알코올":"C2H6O","술":"C2H6O","드라이아이스":"CO2","석회석":"CaCO3","대리석":"CaCO3","분필":"CaCO3","조개껍데기":"CaCO3","모래":"SiO2","석영":"SiO2","유리":"SiO2","녹":"Fe2O3","쇠녹":"Fe2O3","락스":"NaClO","표백제":"NaClO","염산":"HCl","석고":"CaSO4","루비":"Al2O3","사파이어":"Al2O3","에메랄드":"Be3Al2Si6O18","얼음":"H2O","수증기":"H2O","설탕":"C12H22O11","당":"C6H12O6","포도당":"C6H12O6","천연가스":"CH4","LPG":"C3H8","웃음가스":"N2O","간수":"MgCl2","엡섬솔트":"MgSO4","초석":"KNO3","명반":"KAl(SO4)2","붕사":"Na2B4O7","슬라임":"Na2B4O7","테플론":"C2F4","카페인":"C8H10N4O2","커피":"C8H10N4O2","아스피린":"C9H8O4","비타민C":"C6H8O6","비타민씨":"C6H8O6","요소":"CH4N2O","암모니아":"NH3","과산화수소":"H2O2","오존":"O3","뼈":"Ca5(PO4)3(OH)","치아":"Ca5(PO4)3(OH)","바보의금":"FeS2","큐빅":"ZrO2","물":"H2O"};
+const norm=s=>String(s).toLowerCase().replace(/[\s·()（）\-_,.]/g,"");
+function composition(f){
+  const c=parseFormula(f);const els=Object.keys(c);
+  if(!els.length||!els.every(s=>BYSYM[s]))return null;
+  const total=els.reduce((a,s)=>a+MASS[BYSYM[s].z-1]*c[s],0);
+  return{c,els,total,pct:Object.fromEntries(els.map(s=>[s,MASS[BYSYM[s].z-1]*c[s]/total*100]))};
+}
+function localSearch(q){
+  const n=norm(q);if(!n)return[];
+  const res=[];const push=(c,score)=>{const ex=res.find(r=>r.c===c);if(ex)ex.score=Math.max(ex.score,score);else res.push({c,score})};
+  if(ALIAS[q.trim()]||ALIAS[n]){const f=ALIAS[q.trim()]||ALIAS[n];const c=COMPOUNDS.find(x=>x.f===f);if(c)push(c,100)}
+  COMPOUNDS.forEach(c=>{
+    if(norm(c.f)===n||c.f===q.trim())push(c,99);
+    const nm=norm(c.name),parts=c.name.split(/[()（）]/).map(norm).filter(Boolean);
+    if(parts.includes(n))push(c,95);else if(nm.includes(n))push(c,80-Math.min(30,nm.length-n.length));
+    else if(n.length>=2&&norm(c.desc).includes(n))push(c,40);
+  });
+  return res.sort((a,b)=>b.score-a.score).map(r=>r.c);
+}
+function compHTML(f,name,desc,opts={}){
+  const cp=composition(f);if(!cp)return`<div class="warn">화학식 ${esc(f)}을(를) 해석하지 못했어요.</div>`;
+  const nAtoms=Object.values(cp.c).reduce((a,b)=>a+b,0);
+  const subj=name?name.replace(/\(.*?\)/g,"").trim():f;
+  const parts=cp.els.map(s=>`<b style="color:${catColor(BYSYM[s].cat)}">${BYSYM[s].ko}</b> ${cp.c[s]}개`);
+  const josa=(w)=>{const ch=w.charCodeAt(w.length-1);return ch>=0xAC00&&ch<=0xD7A3&&(ch-0xAC00)%28?"은":"는"};
+  return`<div class="formula">${fmt(esc(f))}</div><div style="font-weight:800;font-size:18px">${esc(name||"")}</div>
+  ${desc?`<div class="sub" style="margin:2px 0 0">${esc(desc)}</div>`:""}
+  <p class="sentence">${esc(subj)}${josa(subj)} ${cp.els.length===1?"한 가지 원소":cp.els.length+"가지 원소"}로 이루어져 있어요: ${parts.join(" + ")} (원자 총 ${nAtoms}개)</p>
+  <div class="comp">${cp.els.map(s=>{const e=BYSYM[s];return`<div class="atom" style="--c:${catColor(e.cat)}"><span class="sym">${s}</span><span class="cnt"><b>${e.ko}</b> × ${cp.c[s]}<br>질량 ${cp.pct[s].toFixed(1)}%</span></div>`}).join('<span class="plus" style="color:var(--muted)">+</span>')}</div>
+  <div class="massbar">${cp.els.map(s=>`<span title="${s} ${cp.pct[s].toFixed(1)}%" style="width:${cp.pct[s]}%;background:${catColor(BYSYM[s].cat)}"></span>`).join("")}</div>
+  <div class="sub" style="font-size:12px">질량 구성 비율 · 화학식량 약 ${cp.total.toFixed(2)}</div>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
+    <button class="btn-3d" data-3d="${esc(f)}" data-name="${esc(name||"")}">🧊 3D 모형</button>
+    <button class="btn-ghost btn-sm" data-use="${cp.els.join(",")}">⚗️ 이 원소들로 실험하기</button></div>`;
+}
+function lookEls(els){document.querySelectorAll(".el.look").forEach(d=>d.classList.remove("look"));(els||[]).forEach(s=>{const d=document.querySelector(`.el[data-s="${s}"]`);if(d)d.classList.add("look")})}
+function showLocal(c,cands){
+  $("sRes").innerHTML=compHTML(c.f,c.name,c.desc)+(cands&&cands.length?`<div class="cands"><span class="sub" style="margin:0;align-self:center">혹시 이건가요?</span>${cands.slice(0,6).map(x=>`<button data-pick="${x.f}">${esc(x.name.replace(/\(.*?\)/g,""))} ${fmt(x.f)}</button>`).join("")}</div>`:"");
+  lookEls(c.els);
+}
+async function doSearch(q){
+  q=q.trim();if(!q)return;
+  const hits=localSearch(q);
+  if(hits.length){showLocal(hits[0],hits.slice(1));return}
+  // 화학식으로 직접 입력한 경우
+  if(/^[A-Z(][A-Za-z0-9()]*$/.test(q)&&composition(q)){
+    $("sRes").innerHTML=compHTML(q,"","도감에 없는 화학식이에요. 입력한 화학식을 그대로 분해했어요.");lookEls(composition(q).els);return}
+  if(!hasAI){$("sRes").innerHTML=`<div class="sub">'${esc(q)}'을(를) 도감에서 찾지 못했어요. 화학식(예: NaCl)으로 입력해 보세요.</div>`;lookEls([]);return}
+  $("sRes").innerHTML=`<div class="sub"><span class="spinner" style="border-color:#8b98a7;border-top-color:transparent"></span>도감에 없어서 Claude에게 '${esc(q)}'의 성분을 물어보는 중...</div>`;
+  const prompt=`사용자가 물질 이름 "${q}"의 구성 원소를 알고 싶어 합니다. 정확한 화학 지식으로 답하세요.
+반드시 JSON 하나로만 답하세요(설명·코드블록 없이):
+{"found":true/false,"name":"한국어 정식 이름","formula":"대표 화학식(괄호 허용, 전하·수화물·점 표기 금지, 순물질일 때)","desc":"한 문장 설명","mixture":true/false,"components":[{"name":"성분 이름","formula":"화학식","share":"대략적 비율(예: 78%)"}]}
+- 순물질이면 mixture=false, components는 빈 배열.
+- 공기·바닷물·우유·강철처럼 혼합물이면 mixture=true, formula는 빈 문자열, 주요 성분 최대 5개를 components에.
+- 화학 물질이 아니거나 모르면 found=false.`;
+  try{
+    let r;try{r=await sample.json(prompt,{modelTier:"default"})}
+    catch(e){if(e&&(e.code==="not_granted"||e.code==="rate_limited"))throw e;const t=await sample(prompt,{modelTier:"default"});const m=t.text.match(/\{[\s\S]*\}/);r=JSON.parse(m?m[0]:t.text)}
+    if(!r||!r.found){$("sRes").innerHTML=`<div class="sub">'${esc(q)}'에 해당하는 화학 물질을 찾지 못했어요.</div>`;lookEls([]);return}
+    if(r.mixture&&Array.isArray(r.components)&&r.components.length){
+      const all=new Set();
+      $("sRes").innerHTML=`<div style="font-weight:800;font-size:18px">${esc(r.name)} <span class="kind ion">혼합물</span></div><div class="sub">${esc(r.desc)}</div>
+        <p class="sentence">${esc(r.name)}은(는) 한 가지 화합물이 아니라 여러 물질이 섞인 혼합물이에요. 주요 성분:</p>`+
+        r.components.slice(0,5).map(c=>{const cp=composition(String(c.formula||""));if(cp)cp.els.forEach(s=>all.add(s));
+          return`<div class="mix-sub">${c.share?`<span class="pill pts">${esc(c.share)}</span>`:""}${cp?compHTML(c.formula,c.name,""):`<b>${esc(c.name)}</b>`}</div>`}).join("")+
+        `<div class="sub" style="margin-top:8px">✨ Claude가 알려 준 정보예요</div>`;
+      lookEls([...all]);return}
+    const f=String(r.formula||"");const cp=composition(f);
+    if(!cp){$("sRes").innerHTML=`<div class="sub">${esc(r.name)}: ${esc(r.desc)}<br>화학식을 해석하지 못했어요.</div>`;return}
+    $("sRes").innerHTML=compHTML(f,r.name,r.desc)+`<div class="sub" style="margin-top:8px">✨ 도감에 없어서 Claude가 알려 준 정보예요</div>`;
+    lookEls(cp.els);
+  }catch(e){
+    $("sRes").innerHTML=`<div class="warn">${e&&e.code==="rate_limited"?"요청이 많아요. 잠시 후 다시 시도해 주세요.":e&&e.code==="not_granted"?"Claude 사용 권한이 없어 도감 안에서만 찾을 수 있어요.":"성분을 알아내지 못했어요. 다시 시도해 주세요."}</div>`;
+  }
+}
+$("sForm").addEventListener("submit",e=>{e.preventDefault();$("sInput").blur();doSearch($("sInput").value)});
+$("sRes").addEventListener("click",e=>{
+  const p=e.target.closest("[data-pick]");if(p){const c=COMPOUNDS.find(x=>x.f===p.dataset.pick);showLocal(c,localSearch($("sInput").value).filter(x=>x!==c));return}
+  const u=e.target.closest("[data-use]");if(u){selected=u.dataset.use.split(",");renderSelection();lookEls([]);mix();$("results").scrollIntoView({behavior:"smooth"})}
+});
+
+/* ---------------- 시작 ---------------- */
+buildTable();renderSelection();updateStats();renderDex();newMission();
+</script>
+</body>
+</html>
